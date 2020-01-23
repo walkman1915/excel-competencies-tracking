@@ -1,0 +1,7 @@
+auth.json
+*~
+README 2.md
+user-pool-settings.json
+
+# Ignore AWS SAM build files
+.aws-sam/ 
