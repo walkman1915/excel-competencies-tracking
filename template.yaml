@@ -12,34 +12,119 @@ Globals:
   Function:
     Timeout: 3
 Resources:
-  GetCompetencyFunction:
+  ############ Lambda Functions ############
+  GetCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/competency/
-      Handler: app.lambdaHandler
+      CodeUri: functions/competencies/ # Where does the Lambda's JavaScript file live in the folder directory? Aka the path from this file to the JS file you want
+      Handler: app.lambdaHandler # {JS file name - .js} + . + {method name in that JS file}
       Runtime: nodejs12.x
-      Events:
-        GetCompetency:
+      Events: # Answers "What events can trigger this Lambda?". In this case, it's an API call with a GET method to /competencies
+        GetCompetencies:
           Type: Api
           Properties:
-            Path: /competency
+            Path: /competencies
             Method: get
 
+  ############ DynamoDB Databases ############
   CompetenciesMasterDDBTable: # Master table to store info about each competency
     Type: AWS::DynamoDB::Table
     Properties: 
       AttributeDefinitions: 
-        - 
-          AttributeName: "CompetencyId"
+        - AttributeName: "CompetencyId"
           AttributeType: "S"
       KeySchema: 
-        - 
-          AttributeName: "CompetencyId"
+        - AttributeName: "CompetencyId"
           KeyType: "HASH"
       ProvisionedThroughput: 
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
       TableName: "CompetenciesMaster"
+  TrackingLogDDBTable: # Holds all individual evaluations
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      AttributeDefinitions: 
+        - AttributeName: "UserIdBeingEvaluated"
+          AttributeType: "S"
+        - AttributeName: "CompetencyId_Timestamp"
+          AttributeType: "S"
+        - AttributeName: "DateEvaluated"
+          AttributeType: "S"
+      KeySchema: 
+        - AttributeName: "UserIdBeingEvaluated"
+          KeyType: "HASH"
+        - AttributeName: "CompetencyId_Timestamp"
+          KeyType: "RANGE" # This is the SK
+      LocalSecondaryIndexes:
+        - IndexName: "DateEvaluatedIndex"
+          KeySchema: 
+            - AttributeName: "UserIdBeingEvaluated"
+              KeyType: "HASH"
+            - AttributeName: "DateEvaluated"
+              KeyType: "RANGE" # This is the SK
+          Projection: 
+            ProjectionType: "ALL"
+      ProvisionedThroughput: 
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      TableName: "TrackingLog"
+
+  UsersDDBTable: # Stores info for all possible users of this application (students, faculty/staff, etc.)
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      AttributeDefinitions: 
+        - AttributeName: "UserId"
+          AttributeType: "S"
+      KeySchema: 
+        - AttributeName: "UserId"
+          KeyType: "HASH"
+      ProvisionedThroughput: 
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      TableName: "Users"
+
+  TrackingLocationToCompetenciesDDBTable: # Maps the tracking location (a class or type of advising) to all competencies evaluated in that class/advising type
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      AttributeDefinitions: 
+        - AttributeName: "LocationId"
+          AttributeType: "S"
+      KeySchema: 
+        - AttributeName: "LocationId"
+          KeyType: "HASH"
+      ProvisionedThroughput: 
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      TableName: "TrackingLocationToCompetencies"
+
+  UsersToTrackingLocationDDBTable: # Maps a given user to all the tracking locations they are currently a part of (essentially a student's schedule)
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      AttributeDefinitions: 
+        - AttributeName: "UserId"
+          AttributeType: "S"
+      KeySchema: 
+        - AttributeName: "UserId"
+          KeyType: "HASH"
+      ProvisionedThroughput: 
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      TableName: "UsersToTrackingLocation"
+
+  EvaluationScaleDDBTable: # Contains the textual description of what each evaluation score represents
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      AttributeDefinitions: 
+        - AttributeName: "EvaluationScore"
+          AttributeType: "S"
+      KeySchema: 
+        - AttributeName: "EvaluationScore"
+          KeyType: "HASH"
+      ProvisionedThroughput: 
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      TableName: "EvaluationScale"
+
 
 Outputs: # These outputs are just for our benefit if we want quick access to the ARNs or HTTP address.
          # They're shown in the console after a successful 'sam deploy'
@@ -47,17 +132,17 @@ Outputs: # These outputs are just for our benefit if we want quick access to the
     Description: API Gateway endpoint URL for Prod stage for Excel Competencies Tracking project
     Value:
       Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
-  GetCompetencyFunction: # For consistency's sake, keep this name the same as the function's resource name above
-    Description: Get Competency Lambda Function ARN
+  GetCompetenciesFunction: # For consistency's sake, keep this name the same as the function's resource name above
+    Description: Get Competencies Lambda Function ARN
     Value:
       Fn::GetAtt:
-      - GetCompetencyFunction
+      - GetCompetenciesFunction
       - Arn
-  GetCompetencyFunctionIamRole: # This must literally be {function's resource name} + "IamRole"
-    Description: Implicit IAM Role created for Get Competency function
+  GetCompetenciesFunctionIamRole: # This must literally be {function's resource name} + "IamRole"
+    Description: Implicit IAM Role created for Get Competencies function
     Value:
       Fn::GetAtt:
-      - GetCompetencyFunctionRole
+      - GetCompetenciesFunctionRole
       - Arn
   CompetenciesMasterDDBTable:
     Description: Competencies Master Dynamo DB Table ARN
