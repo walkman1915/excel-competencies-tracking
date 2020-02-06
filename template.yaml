@@ -53,6 +53,34 @@ Resources:
       Environment:
         Variables:
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable # Allows us to access the var "USERS_DDB_TABLE_NAME" in this lambda's javascript code
+  AddEvaluationFunction:
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/evaluations/
+      Handler: post.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        AddEvaluation:
+          Type: Api
+          Properties:
+            Path: /evaluations
+            Method: post
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref EvaluationsDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref EvaluationsDDBTable}
+      Environment:
+        Variables:
+          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code  
 
   ############ DynamoDB Databases ############
   CompetenciesMasterDDBTable: # Master table to store info about each competency
