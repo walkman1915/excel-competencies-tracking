@@ -4,4 +4,7 @@ README 2.md
 user-pool-settings.json
 
 # Ignore AWS SAM build files
-.aws-sam/ 
+.aws-sam/
+
+# Igonre Visual Studio files
+.vs 
