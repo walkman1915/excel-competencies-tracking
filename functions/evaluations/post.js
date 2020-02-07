@@ -25,7 +25,6 @@ exports.lambdaHandler = async (event, context) => {
     try {
         const requestBody = JSON.parse(event.body);
 
-        // TODO: ADD MORE DATA VALIDATION
         // Information from the POST request needed to add a new evaluation
         if (!("UserId" in requestBody) || requestBody.UserId == "") {
             response = {
@@ -96,7 +95,16 @@ exports.lambdaHandler = async (event, context) => {
 
         const evalTime = new Date(year, month, day);
         const dateEvaluated = evalTime.toISOString();
-
+        if (evalTime > now) {
+            response = {
+                statusCode: 400,
+                body: "Given time of evaluation is in the future",
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+            }
+            return response;
+        }
 
         if (!("UserIdEvaluator" in requestBody) || requestBody.UserIdEvaluator == "") {
             response = {
@@ -131,7 +139,7 @@ exports.lambdaHandler = async (event, context) => {
             }
             return response;
         }
-
+        //TODO: Should comments be optional, or at least allowed to be blank?
         if (!("Comments" in requestBody) || requestBody.Comments == "") {
             response = {
                 statusCode: 400,
