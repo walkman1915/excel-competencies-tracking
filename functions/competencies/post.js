@@ -4,6 +4,11 @@ const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const COMPETENCIES_DDB_TABLE_NAME= process.env.COMPETENCIES_DDB_TABLE_NAME; 
 
+/* Hardcoding valid inputs */
+const VALID_DOMAINS = ["TRANSPORTATION", "EMPLOYMENT_AND_CAREERS", "HEALTH_AND_WELLNESS", "FINANCIAL_LITERACY", "HOUSING", "SOCIAL_AND_LEADERSHIP", "TECHNOLOGY_AND_COMMUNICATION"];
+const VALID_DIFFICULTY = ["1", "2", "3", "4"];
+const VALID_FREQUENCIES = ["MONTHLY", "SEMESTERLY", "YEARLY"];
+
 /**
  *
  * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
@@ -19,26 +24,115 @@ const COMPETENCIES_DDB_TABLE_NAME= process.env.COMPETENCIES_DDB_TABLE_NAME;
 exports.lambdaHandler = async (event, context) => {
     try {
         const requestBody = JSON.parse(event.body);
-		isValid = true;
-		//var error_message = "";
 
-        // TODO: ADD MORE DATA VALIDATION
-        const competencyId = ("CompetencyId" in requestBody && requestBody.CompetencyId != "")  ? requestBody.CompetencyId : "999";
-		//isValid = validate("ComptencyId", competencyId, error_message);
-        
-		const competencyTitle = requestBody.CompetencyTitle;
-		//isValid = isValid && validate("ComptencyTitle", competencyTitle, error_message);
-
+		const competencyId = requestBody.CompetencyId;
+		if (!("CompetencyId" in requestBody) || competencyId == "") {
+			response = {
+				statusCode: 400,
+				body: "This request is missing a necessary parameter - CompetencyId.",
+				headers: {
+					'Access-Control-Allow-Origin': '*',
+				},
+			}
+			return response;
+		} else if (!/^\d+$/.test(competencyId)) {
+			response = {
+				statusCode: 400,
+				body: "This request must contain a non-empty CompetencyId with only numeric characters. You entered : " + competencyId,
+				headers: {
+					'Access-Control-Allow-Origin': '*',
+				},
+			}
+			return response;
+		}
+		
+        const competencyTitle = requestBody.CompetencyTitle;
+		if (!("CompetencyTitle" in requestBody) || competencyTitle == "") {
+			response = {
+				statusCode: 400,
+				body: "This request is missing the required parameter - CompetencyTitle.",
+				headers: {
+					'Access-Control-Allow-Origin': '*',
+				},
+			}
+			return response;
+		}
+		
 		const domain = requestBody.Domain;
-		//isValid = isValid && validate("Domain", domain, error_message);
+		if (!("Domain" in requestBody) || domain == "") {
+			response = {
+				statusCode: 400,
+				body: "This request is missing the required parameter - Domain.",
+				headers: {
+					'Access-Control-Allow-Origin': '*',
+				},
+			}
+			return response;
+		} else if (!VALID_DOMAINS.includes(domain)) {
+			response = {
+				statusCode: 400,
+				body: "This request must contain a pre-defined domain. You entered : " + domain + "; but the only valid options are " + VALID_DOMAINS.toString(),
+				headers: {
+					'Access-Control-Allow-Origin': '*',
+				},
+			}
+			return response;
+		}
 
 		const subcategory = requestBody.Subcategory;
-		//isValid = isValid && validate("Subcategory", subcategory, error_message);
+		if (!("Subcategory" in requestBody) || subcategory == "") {
+			response = {
+				statusCode: 400,
+				body: "This request is missing the required parameter - Subcategory.",
+				headers: {
+					'Access-Control-Allow-Origin': '*',
+				},
+			}
+			return response;
+		}
 
 		const difficulty = requestBody.Difficulty;
+		if (!("Difficulty" in requestBody) || difficulty == "") {
+			response = {
+				statusCode: 400,
+				body: "This request is missing the required parameter - Difficulty.",
+				headers: {
+					'Access-Control-Allow-Origin': '*',
+				},
+			}
+			return response;
+		} else if (!VALID_DIFFICULTY.includes(difficulty)) {
+			response = {
+				statusCode: 400,
+				body: "This request must contain a pre-defined domain. You entered : " + difficulty + "; but the only valid options are " + VALID_DIFFICULTY.toString(),
+				headers: {
+					'Access-Control-Allow-Origin': '*',
+				},
+			}
+			return response;
+		}
+
 
 		const evaluationFrequency = requestBody.EvaluationFrequency;
-		//isValid = isValid && validate("EvaluationFrequency", evaluationFrequency, error_message);
+		if (!("EvaluationFrequency" in requestBody) || evaluationFrequency == "") {
+			response = {
+				statusCode: 400,
+				body: "This request is missing the required parameter - EvaluationFrequency.",
+				headers: {
+					'Access-Control-Allow-Origin': '*',
+				},
+			}
+			return response;
+		} else if (!VALID_FREQUENCIES.includes(evaluationFrequency)) {
+			response = {
+				statusCode: 400,
+				body: "This request must contain a pre-defined domain. You entered : " + evaluationFrequency + "; but the only valid options are " + VALID_FREQUENCIES.toString(),
+				headers: {
+					'Access-Control-Allow-Origin': '*',
+				},
+			}
+			return response;
+		}
 
         // Since unique evaluation is future work it's optional
         const uniqueEvaluationScale = ("UniqueEvaluationScale" in requestBody && requestBody.UniqueEvaluationScale != "")  ? requestBody.UniqueEvaluationScale : null;
@@ -54,27 +148,16 @@ exports.lambdaHandler = async (event, context) => {
 			UniqueEvaluationScale : uniqueEvaluationScale
         }
 
-		if (isValid) {
-			// Put the user in the database
-			await addComp(competency);
+		// Put the user in the database
+		await addComp(competency);
 
-			// Generate the response for a successful post
-			response = {
-				statusCode: 201,
-				body: JSON.stringify(competency),
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-				},
-			}
-		} else {
-			// Response is malformed and we should return this information
-			response = {
-				statusCode: 400,
-				body: JSON.stringify(error_message),
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-				},
-			}
+		// Generate the response for a successful post
+		response = {
+			statusCode: 201,
+			body: JSON.stringify(competency),
+			headers: {
+				'Access-Control-Allow-Origin': '*',
+			},
 		}
        
     } catch (err) {
@@ -84,26 +167,6 @@ exports.lambdaHandler = async (event, context) => {
 
     return response
 };
-
-/**
- * Checks that the input parameter is not missing or empty
- * @param {String} name - String representing the name of parameter we are testing, used to build error message
- * @param {String} parameter - String representing the parameter taken from the request body
- * @param {Object} error_message - String a running list of the bad input errors from this request
- * 
- * @returns {Boolean} boolean - that will return true when the parameter exists and is not empty
- 
-function validate(name, parameter, error_message) {
-	if (parameter == null) {
-		error_message = error_message + "This request is missing a necessary parameter - ${name}. \n";
-		return false;
-	} else if (parameter == "") {
-		error_message = error_message + "This request is contains an empty parameter that must have data - ${name}. \n");
-		return false;
-	} 
-	return true;
-}
-*/
 
 /**
  * Competencies object  follows the format in the Database Table Structures document
