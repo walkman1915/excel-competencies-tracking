@@ -36,7 +36,6 @@ exports.lambdaHandler = async (event, context) => {
 		//isValid = isValid && validate("Subcategory", subcategory, error_message);
 
 		const difficulty = requestBody.Difficulty;
-		//isValid = isValid && validate("Difficulty", difficulty, error_message);
 
 		const evaluationFrequency = requestBody.EvaluationFrequency;
 		//isValid = isValid && validate("EvaluationFrequency", evaluationFrequency, error_message);
