@@ -33,7 +33,6 @@ exports.lambdaHandler = async (event, context) => {
 		//isValid = isValid && validate("Domain", domain, error_message);
 
 		const subcategory = requestBody.Subcategory;
-		//isValid = isValid && validate("Subcategory", subcategory, error_message);
 
 		const difficulty = requestBody.Difficulty;
 
