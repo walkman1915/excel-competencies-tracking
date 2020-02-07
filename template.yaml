@@ -56,7 +56,7 @@ Resources:
   AddTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking_location_to_competencies/
+      CodeUri: functions/tracking_locations_to_competencies/
       Handler: post.lambdaHandler
       Runtime: nodejs12.x
       Events:
