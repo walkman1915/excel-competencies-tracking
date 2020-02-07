@@ -3,7 +3,7 @@ version = 0.1
 [default.deploy]
 [default.deploy.parameters]
 stack_name = "excel-competencies-tracking-sam-app"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-j0l7qf5xw850"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1t2kf2py9cg1f"
 s3_prefix = "excel-competencies-tracking-sam-app"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM"
