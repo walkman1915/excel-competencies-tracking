@@ -2,6 +2,10 @@ auth.json
 *~
 README 2.md
 user-pool-settings.json
+samconfig.toml
 
 # Ignore AWS SAM build files
 .aws-sam/ 
+
+# Ignore Visual Studio files
+.vs/
