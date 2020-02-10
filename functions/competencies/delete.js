@@ -40,10 +40,11 @@ exports.lambdaHandler = async (event, context) => {
 			return response;
 		}
 
-        // Put the user in the database
+        // Remove a competency from the database
         await removeCompetency(competencyId);
 
-        // Generate the response for a successful post
+        // TODO : It still returns success when the id was valid (a number) but did not actually exists in the database (ie nothing happened)
+        // Generate the response for a successful delete
         response = {
             statusCode: 201,
             body: "The comptetency with the following id has been deleted - " + JSON.stringify(competencyId),
@@ -60,10 +61,9 @@ exports.lambdaHandler = async (event, context) => {
 };
 
 /**
- * User object follows the format in the Database Table Structures document
- * @param {Object} user - JSON object representing a user to add to the database, with null for non-existing values
+ * @param {Object} competencyId - the competencyId key that will be removed from the database
  * 
- * @returns {Object} object - a promise representing this put request
+ * @returns {Object} object - a promise representing this delete request
  */
 function removeCompetency(competencyId) {
     return ddb.delete({
