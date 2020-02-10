@@ -66,7 +66,7 @@ exports.lambdaHandler = async (event, context) => {
  */
 function addEvaluationScale(evaluationScale) {
     return ddb.put({
-        TableName: EVALUATIONSCALE_DDB_TABLE_NAME,
+        TableName: EVALUATION_SCALE_DDB_TABLE_NAME,
         Item: evaluationScale,
     }).promise();
 }
