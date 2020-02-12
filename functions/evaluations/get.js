@@ -66,7 +66,7 @@ exports.lambdaHandler = async (event, context) => {
         console.log(allEvals);
         // Generate the response body for a successful get
         
-        respBody = {};
+        let respBody = {};
         respBody.Items = allEvals.Items; //Gets the actual items from the call
 
         //If there are more items after the provided ones (for example if a limit is set and this does not go to the end of the table)
