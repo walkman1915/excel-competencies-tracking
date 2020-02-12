@@ -18,19 +18,34 @@ const EVALUATIONS_DDB_TABLE_NAME = process.env.EVALUATIONS_DDB_TABLE_NAME; // Al
  */
 exports.lambdaHandler = async (event, context) => {
     try {
-        // const requestBody = JSON.parse(event.body);
+        const requestBody = JSON.parse(event.body);
 
         // TODO: ADD MORE DATA VALIDATION
-        // Information from the POST request needed to add a new user
+        
         
         console.log("Recieved Get Request");
-        // Put the user in the database
-        const allEvals = await getEvals();
+        let params = AWS.DynamoDB.QueryInput = {
+            TableName: EVALUATIONS_DDB_TABLE_NAME
+        }
+        const queryStringParameters = event.queryStringParameters
+        console.log(queryStringParameters);
+        if (queryStringParameters != null && "ExclusiveStartKey" in queryStringParameters && queryStringParameters.ExclusiveStartKey != "") {
+             params.ExclusiveStartKey = JSON.parse(Buffer.from(queryStringParameters.ExclusiveStartKey,'base64').toString('binary'));
+        }
+        params.Limit = 2;
+        
+        const allEvals = await getEvals(params);
         console.log(allEvals);
-        // Generate the response for a successful post
+        // Generate the response for a successful get
+        
+        respBody = {};
+        respBody.Items = allEvals.Items;
+        if ("LastEvaluatedKey" in allEvals) {
+            respBody.LastEvaluatedKey = Buffer.from(JSON.stringify(allEvals.LastEvaluatedKey),'binary').toString('base64');
+        }
         response = {
             statusCode: 200,
-            body: JSON.stringify(allEvals),
+            body: JSON.stringify(respBody),
             headers: {
                 'Access-Control-Allow-Origin': '*',
             },
@@ -45,11 +60,10 @@ exports.lambdaHandler = async (event, context) => {
 
 /**
  * 
+ * @param {Object} params - a JSON representation of the params for the get request
  * 
  * @returns {Object} object - a promise representing this get request
  */
-function getEvals() {
-    return ddb.scan({
-        TableName: EVALUATIONS_DDB_TABLE_NAME,
-    }).promise();
+function getEvals(params) {
+    return ddb.scan(params).promise();
 }
