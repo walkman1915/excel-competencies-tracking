@@ -25,34 +25,22 @@ Resources:
           Properties:
             Path: /competencies # What should the official API url be? It will be whatever you type here
             Method: get # Which HTTP method (get, post, delete, etc.) should will invoke this lambda when an API call is made at this path?
-<<<<<<< HEAD
   AddCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
       CodeUri: functions/competencies/
       Handler: post.lambdaHandler
-=======
+
   DeleteSpecificCompetencyFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
       CodeUri: functions/competencies/{competencyId}
       Handler: delete.lambdaHandler
->>>>>>> competencies_delete
       Runtime: nodejs12.x
       Events:
-        GetCompetencies:
+        DeleteCompetencies:
           Type: Api
           Properties:
-<<<<<<< HEAD
-            Path: /competencies
-            Method: post
-      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
-        - Statement:
-          - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:PutItem
-=======
             Path: /competencies/{competencyId}
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -63,7 +51,6 @@ Resources:
               - dynamodb:DeleteItem
               - dynamodb:GetItem
             # Add resources for DelteComp
->>>>>>> competencies_delete
             Resource:
               - !Sub
                 - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
@@ -73,11 +60,35 @@ Resources:
                 - { tableName: !Ref CompetenciesMasterDDBTable}
       Environment:
         Variables:
-<<<<<<< HEAD
-          COMPETENCIES_DDB_TABLE_NAME: !Ref CompetenciesMasterDDBTable 
-=======
           COMPETENCIES_DDB_TABLE_NAME: !Ref CompetenciesMasterDDBTable
->>>>>>> competencies_delete
+  AddCompetenciesFunction:
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/competencies/
+      Handler: post.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        GetCompetencies:
+          Type: Api
+          Properties:
+              Path: /competencies
+              Method: post
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource:
+              - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref CompetenciesMasterDDBTable}
+              - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref CompetenciesMasterDDBTable}
+      Environment:
+        Variables:
+          COMPETENCIES_DDB_TABLE_NAME: !Ref CompetenciesMasterDDBTable 
   AddUserFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
