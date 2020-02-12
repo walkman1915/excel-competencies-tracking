@@ -90,6 +90,25 @@ Resources:
             Action:
               - dynamodb:DeleteItem
               - dynamodb:GetItem
+  GetEvaluationsFunction:
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/evaluations/
+      Handler: get.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        GetEvaluations:
+          Type: Api
+          Properties:
+            Path: /evaluations
+            Method: get
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Scan
             Resource:
               - !Sub
                 - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
