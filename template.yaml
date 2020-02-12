@@ -71,7 +71,7 @@ Resources:
             Effect: Allow
             Action:
               - dynamodb:PutItem
-            Resource:
+            Resource: # this should stay!
               - !Sub
                 - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
                 - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
@@ -81,7 +81,7 @@ Resources:
       Environment:
         Variables:
           TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME: !Ref TrackingLocationToCompetenciesDDBTable # Allows us to access the var "USERS_DDB_TABLE_NAME" in this lambda's javascript code
-  DeleteTrackingLocationToCompetenciesFunction:
+  DeleteTrackingLocationToCompetenciesFunction: 
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
       CodeUri: functions/tracking_location_to_competencies/
@@ -99,7 +99,7 @@ Resources:
             Effect: Allow
             Action:
               - dynamodb:DeleteItem
-            Resource:
+            Resource: # this should stay too!
               - !Sub
                 - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
                 - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
