@@ -20,29 +20,64 @@ exports.lambdaHandler = async (event, context) => {
     try {
         const requestBody = JSON.parse(event.body);
 
-        // TODO: ADD MORE DATA VALIDATION
+    
         
-        
+        //Log the received get request
         console.log("Recieved Get Request");
+        //Instantiate the parameters that will be used for the get request
+        //QueryInput doc: https://docs.aws.amazon.com/sdkforruby/api/Aws/DynamoDB/Types/QueryInput.html
         let params = AWS.DynamoDB.QueryInput = {
             TableName: EVALUATIONS_DDB_TABLE_NAME
         }
+        //Gets the query parameters from the get request, expecting possibly the limit (number per page)
+        //or exclusiveStartKey (what element to start from in the case of pagination)
         const queryStringParameters = event.queryStringParameters
         console.log(queryStringParameters);
+        
+        //Checks and gets the ExclusiveStartKey.  The queryparams need to be null-checked because if no params are provided
+        //then the object will be null.  It is assumed that the ESK is base-64 encoded JSON (i.e. the exact same thing 
+        //that was given back to the user in the previous response)
         if (queryStringParameters != null && "ExclusiveStartKey" in queryStringParameters && queryStringParameters.ExclusiveStartKey != "") {
              params.ExclusiveStartKey = JSON.parse(Buffer.from(queryStringParameters.ExclusiveStartKey,'base64').toString('binary'));
         }
-        params.Limit = 2;
+        //Gets the provided limit (maximum number of items it will display) and verifies that it is a valid value
+        //If no limit is provided, it will default to returning every single item
+        if (queryStringParameters != null && "Limit" in queryStringParameters && queryStringParameters.Limit != "") {
+             let limit = queryStringParameters.Limit;
+             console.log("Limit: " + limit);
+             //Validation if the limit is an actual number or not, and it must be positive or a 400 is returned
+             if (isNaN(+limit) || +limit <= 0) {
+                response = {
+                    statusCode: 400,
+                    body: "Limit must be a positive number if it is provided",
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                    },
+                }
+                return response
+             }
+             params.Limit = +limit;
+        }
+        //A default limit could be set here if desired
+        // params.Limit = 2;
         
+        //Use the provided parameters to make the get API request
         const allEvals = await getEvals(params);
         console.log(allEvals);
-        // Generate the response for a successful get
+        // Generate the response body for a successful get
         
         respBody = {};
-        respBody.Items = allEvals.Items;
+        respBody.Items = allEvals.Items; //Gets the actual items from the call
+
+        //If there are more items after the provided ones (for example if a limit is set and this does not go to the end of the table)
+        //then the response will return a LastEvaluatedKey, which can be passed back into the next call
+        //as a ExclusiveStartKey in order to get the next 'page' of results.  This key is stringified and base-64 encoded
+        //so that it can easily be passed back into the request to get the next page.  To get the next group of items,
+        //it is expected that the user pass in the exact same key that is returned by the previous request as the ESK parameter
         if ("LastEvaluatedKey" in allEvals) {
             respBody.LastEvaluatedKey = Buffer.from(JSON.stringify(allEvals.LastEvaluatedKey),'binary').toString('base64');
         }
+        //Construct the response
         response = {
             statusCode: 200,
             body: JSON.stringify(respBody),
@@ -59,6 +94,7 @@ exports.lambdaHandler = async (event, context) => {
 };
 
 /**
+ * Performs the API call on the table to get the results
  * 
  * @param {Object} params - a JSON representation of the params for the get request
  * 
