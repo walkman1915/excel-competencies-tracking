@@ -20,10 +20,45 @@ exports.lambdaHandler = async (event, context) => {
     try {
         const requestBody = JSON.parse(event.body);
 
-        // TODO: ADD MORE DATA VALIDATION
         // Information from the POST request needed to add a new tracking location to competency
+        if (!("LocationId" in requestBody) || requestBody.LocationId == "") {
+            response = {
+                statusCode: 400,
+                body: "Required body argument 'LocationId' was not specified",
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+            }
+            return response;
+        }
         const locationId = requestBody.LocationId;
+
+        if (!("CompetencyIds" in requestBody) || requestBody.CompetencyIds == "") {
+            response = {
+                statusCode: 400,
+                body: "Required body argument 'CompetencyIds' was not specified",
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+            }
+            return response;
+        }
         const competencyIds = requestBody.CompetencyIds;
+
+
+        // am I construction the location name or is it a field in the given request????
+
+        // apparently do a get request 
+        if (!("LocationName" in requestBody) || requestBody.LocationName == "") {
+            response = {
+                statusCode: 400,
+                body: "Required body argument 'LocationName' was not specified",
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+            }
+            return response;
+        }
         const locationName = requestBody.LocationName;
         // const cohort = ("Cohort" in requestBody && requestBody.Cohort != "")  ? requestBody.Cohort : null;
         // const gtId = ("GTId" in requestBody && requestBody.Email != "")  ? requestBody.GTId : null;
