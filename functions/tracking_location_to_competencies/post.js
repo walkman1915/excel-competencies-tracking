@@ -20,6 +20,8 @@ exports.lambdaHandler = async (event, context) => {
     try {
         const requestBody = JSON.parse(event.body);
 
+        console.log(requestBody);
+
         // Information from the POST request needed to add a new tracking location to competency
         if (!("LocationId" in requestBody) || requestBody.LocationId == "") {
             response = {
