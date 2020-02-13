@@ -84,14 +84,14 @@ Resources:
   DeleteEvaluationFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/evaluations/
+      CodeUri: functions/evaluations/{userId}/{compId}/{timeStamp}  
       Handler: delete.lambdaHandler
       Runtime: nodejs12.x
       Events:
         DeleteEvaluation:
           Type: Api
           Properties:
-            Path: /evaluations
+            Path: /evaluations/{userId}/{compId}/{timeStamp}
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:

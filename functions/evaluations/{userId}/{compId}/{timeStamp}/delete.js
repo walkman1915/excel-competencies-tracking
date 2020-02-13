@@ -22,29 +22,32 @@ exports.lambdaHandler = async (event, context) => {
 
         
         // Information from the DELETE request needed to remove an evaluation
-        if (!("EvalId" in requestBody) || requestBody.EvalId == "") {
-            response = {
-				statusCode: 400,
-				body: "This request is missing a necessary parameter - EvalId.",
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-				},
-			}
-			return response;
-        }
-        const evalId = requestBody.EvalId;
+        // if (!("EvalId" in requestBody) || requestBody.EvalId == "") {
+        //     response = {
+		// 		statusCode: 400,
+		// 		body: "This request is missing a necessary parameter - EvalId.",
+		// 		headers: {
+		// 			'Access-Control-Allow-Origin': '*',
+		// 		},
+		// 	}
+		// 	return response;
+        // }
+        const evalId = event.pathParameters.userId;
 
-        if (!("CompetencyId_Timestamp" in requestBody) || requestBody.CompetencyId_Timestamp == "") {
-            response = {
-				statusCode: 400,
-				body: "This request is missing a necessary parameter - CompetencyId_Timestamp.",
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-				},
-			}
-			return response;
-        }
-        const compId_timestamp = requestBody.CompetencyId_Timestamp;
+        // if (!("CompetencyId_Timestamp" in requestBody) || requestBody.CompetencyId_Timestamp == "") {
+        //     response = {
+		// 		statusCode: 400,
+		// 		body: "This request is missing a necessary parameter - CompetencyId_Timestamp.",
+		// 		headers: {
+		// 			'Access-Control-Allow-Origin': '*',
+		// 		},
+		// 	}
+		// 	return response;
+        // }
+        const compId = event.pathParameters.compId;
+        const timestamp = event.pathParameters.timeStamp;
+
+        const compId_timestamp = compId + "_" + timestamp;
 
         //The key representing the parameters for the delete and get request
         //Note that AWS documentation will often tell you to format them like attrName: {"S": value}
@@ -54,6 +57,7 @@ exports.lambdaHandler = async (event, context) => {
             "CompetencyId_Timestamp": compId_timestamp
             
         }
+        console.log(key)
 
         // Check if an evaluation with the given parameters is in the database
         const getResponse = await getEval(key);
