@@ -22,11 +22,12 @@ exports.lambdaHandler = async (event, context) => {
         const requestBody = JSON.parse(event.body);
         const trackingLocationId = event.pathParameters.trackingLocationId; // Get the trackingLocationId from /tracking_location_to_competencies/{trackingLocationId} path variable
 
+        console.log(trackingLocationId);
         const trackingLocation = await getSpecificTrackingLocation(trackingLocationId);
         var statusCode = 200;
         
         // If the trackingLocation object is empty, it means there was no data found for that trackingLocation ID in the database
-        if (isEmptyObject(user)) {
+        if (isEmptyObject(trackingLocation)) {
             statusCode = 204; // A 204 code represents that the action was successful but there is no content
         }
 

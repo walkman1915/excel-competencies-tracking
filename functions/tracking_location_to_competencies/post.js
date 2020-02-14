@@ -18,6 +18,8 @@ const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME = process.env.TRACKING_L
  */
 exports.lambdaHandler = async (event, context) => {
     try {
+
+        console.log("tennis");
         const requestBody = JSON.parse(event.body);
 
         console.log(requestBody);
@@ -99,7 +101,7 @@ exports.lambdaHandler = async (event, context) => {
  */
 function addTrackingLocation(tracking_location) {
     return ddb.put({
-        TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME_DDB_TABLE_NAME,
+        TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME,
         Item: tracking_location,
     }).promise();
 }

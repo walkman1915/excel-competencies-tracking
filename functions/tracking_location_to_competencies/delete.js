@@ -23,17 +23,43 @@ exports.lambdaHandler = async (event, context) => {
         // TODO: ADD MORE DATA VALIDATION
         
         // Information for the DELETE request needed to delete a new tracking location to competency
+
+         // Information from the DELETE request needed to add a new tracking location to competency
+         if (!("LocationId" in requestBody) || requestBody.LocationId == "") {
+            response = {
+                statusCode: 400,
+                body: "Required body argument 'LocationId' was not specified",
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+            }
+            return response;
+        }
         const locationId = requestBody.LocationId;
+
+        if (!("CompetencyIds" in requestBody) || requestBody.CompetencyIds == "") {
+            response = {
+                statusCode: 400,
+                body: "Required body argument 'CompetencyIds' was not specified",
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+            }
+            return response;
+        }
         const competencyIds = requestBody.CompetencyIds;
+
+
         const locationName = requestBody.LocationName;
         
         // Construct the tracking location to competency object to delete from the database
         const key = {
-            LocationId: locationId,
-            CompetencyIds: competencyIds,
-            LocationName: locationName
+            "LocationId": locationId,
+            "CompetencyIds": competencyIds,
+            "LocationName": locationName
         }
 
+        console.log(key);
         // Delete the user in the database
         await deleteEval(key);
         
@@ -61,7 +87,7 @@ exports.lambdaHandler = async (event, context) => {
  */
 function deleteEval(key) {
     return ddb.delete({
-        TableName: EVALUATIONS_DDB_TABLE_NAME,
+        TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME,
         Key: key
     }).promise();
 }
