@@ -47,7 +47,7 @@ exports.lambdaHandler = async (event, context) => {
 };
 
 /**
- * Gets a specific user via user ID and returns the entire entry for that user in JSON format (defined in the Database Table Structures document)
+ * Gets a specific tracking location via tracking location ID and returns the entire entry for that user in JSON format (defined in the Database Table Structures document)
  * @param {string} trackingLocationId - The ID of a trackingLocation whose information you want to retrieve
  * 
  * @returns {Promise} userPromise - Promise object representing a JSON object with all the data in this trackingLocation's entry in the table,

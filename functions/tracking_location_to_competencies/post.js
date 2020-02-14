@@ -19,23 +19,23 @@ const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME = process.env.TRACKING_L
 exports.lambdaHandler = async (event, context) => {
     try {
 
-        console.log("tennis");
+        console.log("Request received!");
         const requestBody = JSON.parse(event.body);
 
-        console.log(requestBody);
+        // console.log(requestBody);
 
         // Information from the POST request needed to add a new tracking location to competency
-        if (!("LocationId" in requestBody) || requestBody.LocationId == "") {
+        if (!("LocationName" in requestBody) || requestBody.LocationName == "") {
             response = {
                 statusCode: 400,
-                body: "Required body argument 'LocationId' was not specified",
+                body: "Required body argument 'LocationName' was not specified",
                 headers: {
                     'Access-Control-Allow-Origin': '*',
                 },
             }
             return response;
         }
-        const locationId = requestBody.LocationId;
+        const locationName = requestBody.LocationName;
 
         if (!("CompetencyIds" in requestBody) || requestBody.CompetencyIds == "") {
             response = {
@@ -49,30 +49,59 @@ exports.lambdaHandler = async (event, context) => {
         }
         const competencyIds = requestBody.CompetencyIds;
 
-
-        // am I construction the location name or is it a field in the given request????
-
-        // apparently do a get request 
-        if (!("LocationName" in requestBody) || requestBody.LocationName == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'LocationName' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
+        let params = AWS.DynamoDB.QueryInput = {
+            TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME,
+            FilterExpression: "LocationName = :locationName",
+            ExpressionAttributeValues: {
+                ":locationName": locationName
             }
-            return response;
+            
         }
-        const locationName = requestBody.LocationName;
-        // const cohort = ("Cohort" in requestBody && requestBody.Cohort != "")  ? requestBody.Cohort : null;
-        // const gtId = ("GTId" in requestBody && requestBody.Email != "")  ? requestBody.GTId : null;
+
+        // scan the table for a match of locationName to see if creating a new Id is not necessary
+        const match = await getTrackingLocation(params);
+
+        console.log(match);
+
+        let locationId;
+
+        // if a match exists
+        if ("LocationId" in match) {
+
+            locationId = match.locationId;
+
+        } else {
+
+            // until a valid Id is obtained (i.e. a random number that doesn't collide is generated)
+            while (locationId == null) {
+
+                // attempting to create a new locationId
+                potentialLocationId = String(Math.floor((Math.random() * 10000) + 1));
+
+                //console.log("Attempting new id of " + potentialLocationId);
+
+                // see if collision exists
+                let collision = await getSpecificTrackingLocation(potentialLocationId);
+                
+                // we want collision to be empty! (since that means that potentialLocationId is a valid id!)
+                if (isEmptyObject(collision)) {
+
+                    //console.log(potentialLocationId + " doesn't exist yet!");
+                    locationId = potentialLocationId;
+
+                }
+            }
+
+        }
+
         
-        // Construct the tracking location to competency object to store in the database
         const tracking_location = {
             LocationId: locationId,
             CompetencyIds: competencyIds,
             LocationName: locationName
         }
+
+        console.log(tracking_location);
 
         // Put the tracking location to competency in the database
         await addTrackingLocation(tracking_location);
@@ -104,4 +133,46 @@ function addTrackingLocation(tracking_location) {
         TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME,
         Item: tracking_location,
     }).promise();
+}
+
+/**
+ * Gets a specific tracking location via tracking location ID and returns the entire entry for that user in JSON format (defined in the Database Table Structures document)
+ * @param {string} trackingLocationId - The ID of a trackingLocation whose information you want to retrieve
+ * 
+ * @returns {Promise} userPromise - Promise object representing a JSON object with all the data in this trackingLocation's entry in the table,
+ *                                 or an empty object {} if no user with that ID was found
+ */
+function getSpecificTrackingLocation(trackingLocationId) {
+    return ddb.get({
+        TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME,
+        Key:{
+            "LocationId": trackingLocationId
+        }
+    }).promise();
+}
+
+/**
+ * Checks if the provided JSON object is empty {} or not
+ * @param {JSON} obj - The object to check for emptiness
+ * 
+ * @returns {boolean} True if this JSON object is empty, false if it is not empty
+ */
+function isEmptyObject(obj) {
+    for (var key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * Performs the API call on the table to get the results
+ * 
+ * @param {Object} params - a JSON representation of the params for the get request
+ * 
+ * @returns {Object} object - a promise representing this get request
+ */
+function getTrackingLocation(params) {
+    return ddb.scan(params).promise();
 }
