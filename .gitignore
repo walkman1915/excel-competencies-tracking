@@ -5,7 +5,10 @@ user-pool-settings.json
 samconfig.toml
 
 # Ignore AWS SAM build files
-.aws-sam/ 
+.aws-sam/
 
-# Ignore Visual Studio files
+# Igonre Visual Studio files
 .vs/
+
+# Ignore Webstorm files
+.idea/
