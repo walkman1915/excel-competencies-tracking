@@ -25,7 +25,7 @@ Resources:
           Properties:
             Path: /competencies # What should the official API url be? It will be whatever you type here
             Method: get # Which HTTP method (get, post, delete, etc.) should will invoke this lambda when an API call is made at this path?
-  AddUserFunction:
+  AddUserFunction: #Function for adding a new user to the table
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
       CodeUri: functions/users/
@@ -53,7 +53,7 @@ Resources:
       Environment:
         Variables:
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable # Allows us to access the var "USERS_DDB_TABLE_NAME" in this lambda's javascript code
-  AddEvaluationFunction:
+  AddEvaluationFunction: #Function for adding a new evaluation to the table
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
       CodeUri: functions/evaluations/
@@ -81,7 +81,7 @@ Resources:
       Environment:
         Variables:
           EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code  
-  DeleteEvaluationFunction:
+  DeleteEvaluationFunction: #Function for deleting a specific evaluation from the table
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
       CodeUri: functions/evaluations/{userId}/{compId}/{timeStamp}  
@@ -110,7 +110,7 @@ Resources:
       Environment:
         Variables:
           EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code  
-  GetEvaluationsFunction:
+  GetEvaluationsFunction: #Function for getting all of the evaluations in the table
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
       CodeUri: functions/evaluations/
@@ -121,6 +121,35 @@ Resources:
           Type: Api
           Properties:
             Path: /evaluations
+            Method: get
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Scan
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref EvaluationsDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref EvaluationsDDBTable}
+      Environment:
+        Variables:
+          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code  
+  GetEvaluationsForUserFunction: # Function for getting all of the evaluations for a specific student
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/evaluations/{userId}
+      Handler: get.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        GetEvaluationsForUser:
+          Type: Api
+          Properties:
+            Path: /evaluations/{userId}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
