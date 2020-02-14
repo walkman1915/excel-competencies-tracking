@@ -19,11 +19,19 @@ const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB = process.env.TRACKING_LOCATIONS_TO
 exports.lambdaHandler = async (event, context) => {
     try {
 
+        // parse body of request
         const requestBody = JSON.parse(event.body);
+
+        // get id as a path parameter
         const trackingLocationId = event.pathParameters.trackingLocationId; // Get the trackingLocationId from /tracking_location_to_competencies/{trackingLocationId} path variable
 
+        // log it for funsies
         console.log(trackingLocationId);
+
+        // retrieve result (if any) given an id from DynamoDB table
         const trackingLocation = await getSpecificTrackingLocation(trackingLocationId);
+
+        // default code
         var statusCode = 200;
         
         // If the trackingLocation object is empty, it means there was no data found for that trackingLocation ID in the database
@@ -43,7 +51,7 @@ exports.lambdaHandler = async (event, context) => {
         }
 
         console.log(response);
-        
+
     } catch (err) {
         console.log(err);
         return err;
@@ -82,3 +90,4 @@ function isEmptyObject(obj) {
     }
     return true;
 }
+
