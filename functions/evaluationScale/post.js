@@ -36,7 +36,7 @@ exports.lambdaHandler = async (event, context) => {
 
         const evaluationScore = requestBody.EvaluationScore;
         //evaluationScore isn't in the range of 0 to 4
-        if (!(validEvidence.includes(evaluationScore))) {
+        if (!(validEvaluationScores.includes(evaluationScore))) {
             response = {
                 statusCode: 400, //bad request error code
                 body: "EvaluationScore was not valid, given value: '" + evaluationScore + "'. Expected values: " + validEvaluationScores.toString(),
