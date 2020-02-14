@@ -174,6 +174,18 @@ exports.lambdaHandler = async (event, context) => {
             return response;
         }
 
+        if (!("Approved" in requestBody) || requestBody.Approved == "") {
+            response = {
+                statusCode: 400,
+                body: "Required body argument 'Approved' was not specified",
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+            }
+            return response;
+        }
+        const approved = requestBody.Approved;
+
 
         // Construct the eval object to store in the database
         const eval = {
@@ -184,7 +196,8 @@ exports.lambdaHandler = async (event, context) => {
             DateEvaluated: dateEvaluated,
             EvaluationScore: evalScore,
             Comments: comments,
-            Evidence: evidence
+            Evidence: evidence,
+            Approved: approved
         }
 
         // Put the evaluation in the database
