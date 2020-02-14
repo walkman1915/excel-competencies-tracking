@@ -24,6 +24,8 @@ exports.lambdaHandler = async (event, context) => {
 
         // console.log(requestBody);
 
+        // @todo add validation for advising?
+
         // Information from the POST request needed to add a new tracking location to competency
         if (!("LocationName" in requestBody) || requestBody.LocationName == "") {
             response = {
