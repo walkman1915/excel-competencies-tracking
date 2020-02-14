@@ -168,6 +168,35 @@ Resources:
       Environment:
         Variables:
           EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code  
+  GetEvaluationsForUserAndCompFunction: # Function for getting all of the evaluations for a specific student for a specific competency
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/evaluations/{userId}/{compId}
+      Handler: get.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        GetEvaluationsForUserAndComp:
+          Type: Api
+          Properties:
+            Path: /evaluations/{userId}/{compId}
+            Method: get
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Scan
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref EvaluationsDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref EvaluationsDDBTable}
+      Environment:
+        Variables:
+          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code  
   GetSpecificEvaluationFunction: # Function for getting a specific evaluation matching a user id, comp id, and timestamp
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
