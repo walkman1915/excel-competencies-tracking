@@ -82,7 +82,7 @@ Resources:
                 - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
       Environment:
         Variables:
-          TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME: !Ref TrackingLocationToCompetenciesDDBTable # Allows us to access the var "USERS_DDB_TABLE_NAME" in this lambda's javascript code
+          TRACKING_LOCATIONS_TO_COMPETENCIES_DDB: !Ref TrackingLocationToCompetenciesDDBTable # Allows us to access the var in this lambda's javascript code
   DeleteTrackingLocationToCompetenciesFunction: 
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -110,7 +110,7 @@ Resources:
                 - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
       Environment:
         Variables:
-          TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME: !Ref TrackingLocationToCompetenciesDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code  
+          TRACKING_LOCATIONS_TO_COMPETENCIES_DDB: !Ref TrackingLocationToCompetenciesDDBTable # Allows us to access the var in this lambda's javascript code  
   GetSpecificTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -138,7 +138,7 @@ Resources:
                 - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
       Environment:
         Variables:
-          TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME: !Ref TrackingLocationToCompetenciesDDBTable
+          TRACKING_LOCATIONS_TO_COMPETENCIES_DDB: !Ref TrackingLocationToCompetenciesDDBTable
 
   ############ DynamoDB Databases ############
   CompetenciesMasterDDBTable: # Master table to store info about each competency

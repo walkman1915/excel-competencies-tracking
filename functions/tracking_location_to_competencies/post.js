@@ -2,7 +2,7 @@ let response;
 
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
-const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME = process.env.TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME; // Allows us to access the environment variables defined in the Cloudformation template
+const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB = process.env.TRACKING_LOCATIONS_TO_COMPETENCIES_DDB; // Allows us to access the environment variables defined in the Cloudformation template
 
 /**
  *
@@ -50,7 +50,7 @@ exports.lambdaHandler = async (event, context) => {
         const competencyIds = requestBody.CompetencyIds;
 
         let params = AWS.DynamoDB.QueryInput = {
-            TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME,
+            TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB,
             FilterExpression: "LocationName = :locationName",
             ExpressionAttributeValues: {
                 ":locationName": locationName
@@ -66,9 +66,12 @@ exports.lambdaHandler = async (event, context) => {
         let locationId;
 
         // if a match exists
-        if ("LocationId" in match) {
+        // if ("LocationId" in match) {
+        if ("Items" in match && match.Items != undefined && match.Items.length != 0) {
+        
+            locationId = match.Items[0].LocationId;
 
-            locationId = match.locationId;
+            console.log("a match existed with id " + locationId);
 
         } else {
 
@@ -130,7 +133,7 @@ exports.lambdaHandler = async (event, context) => {
  */
 function addTrackingLocation(tracking_location) {
     return ddb.put({
-        TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME,
+        TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB,
         Item: tracking_location,
     }).promise();
 }
@@ -144,7 +147,7 @@ function addTrackingLocation(tracking_location) {
  */
 function getSpecificTrackingLocation(trackingLocationId) {
     return ddb.get({
-        TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME,
+        TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB,
         Key:{
             "LocationId": trackingLocationId
         }

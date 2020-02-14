@@ -2,7 +2,7 @@ let response;
 
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
-const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME = process.env.TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME; // Allows us to access the environment variables defined in the Cloudformation template
+const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB = process.env.TRACKING_LOCATIONS_TO_COMPETENCIES_DDB; // Allows us to access the environment variables defined in the Cloudformation template
 
 /**
  *
@@ -87,7 +87,7 @@ exports.lambdaHandler = async (event, context) => {
  */
 function deleteEval(key) {
     return ddb.delete({
-        TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME,
+        TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB,
         Key: key
     }).promise();
 }

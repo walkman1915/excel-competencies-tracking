@@ -2,7 +2,7 @@ let response;
 
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
-const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME = process.env.TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME; // Allows us to access the environment variables defined in the Cloudformation template
+const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB = process.env.TRACKING_LOCATIONS_TO_COMPETENCIES_DDB; // Allows us to access the environment variables defined in the Cloudformation template
 
 /**
  *
@@ -28,6 +28,9 @@ exports.lambdaHandler = async (event, context) => {
         
         // If the trackingLocation object is empty, it means there was no data found for that trackingLocation ID in the database
         if (isEmptyObject(trackingLocation)) {
+
+            console.log("No match for " + trackingLocationId);
+
             statusCode = 204; // A 204 code represents that the action was successful but there is no content
         }
 
@@ -38,6 +41,9 @@ exports.lambdaHandler = async (event, context) => {
                 'Access-Control-Allow-Origin': '*',
             },
         }
+
+        console.log(response);
+        
     } catch (err) {
         console.log(err);
         return err;
@@ -55,7 +61,7 @@ exports.lambdaHandler = async (event, context) => {
  */
 function getSpecificTrackingLocation(trackingLocationId) {
     return ddb.get({
-        TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME,
+        TableName: TRACKING_LOCATIONS_TO_COMPETENCIES_DDB,
         Key:{
             "LocationId": trackingLocationId
         }
