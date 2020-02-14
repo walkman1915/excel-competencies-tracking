@@ -20,12 +20,25 @@ exports.lambdaHandler = async (event, context) => {
     try {
         const requestBody = JSON.parse(event.body);
 
-        // TODO: ADD MORE DATA VALIDATION
         // Information from the POST request needed to add a new user
+        if (!("UserId" in requestBody) || requestBody.UserId == "") {
+            return createMissingParameterErrorResponse("UserId");
+        }
         const userId = requestBody.UserId;
+
+        // TODO: decide what info must be present in UserInfo blob
+        if (!("UserInfo" in requestBody) || requestBody.UserInfo == "") {
+            return createMissingParameterErrorResponse("UserInfo");
+        }
         const userInfo = requestBody.UserInfo;
+
+        if (!("Role" in requestBody) || requestBody.Role == "") {
+            return createMissingParameterErrorResponse("Role");
+        }
         const role = requestBody.Role;
+
         // Cohort and GTID are optional, so if they are not present we set them to null
+        // TODO: can ensure cohort is present if this is a required field for all students
         const cohort = ("Cohort" in requestBody && requestBody.Cohort != "")  ? requestBody.Cohort : null;
         const gtId = ("GTId" in requestBody && requestBody.Email != "")  ? requestBody.GTId : null;
         
@@ -68,4 +81,15 @@ function addUser(user) {
         TableName: USERS_DDB_TABLE_NAME,
         Item: user,
     }).promise();
+}
+
+function createMissingParameterErrorResponse(missingParameter) {
+    response = {
+        statusCode: 400,
+        body: "This request is missing a necessary parameter - " + missingParameter + ".",
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+        },
+    }
+    return response;
 }
