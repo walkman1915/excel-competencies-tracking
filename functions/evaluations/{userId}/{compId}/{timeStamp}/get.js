@@ -25,19 +25,23 @@ exports.lambdaHandler = async (event, context) => {
         //Log the received get request
         console.log("Recieved Get Request");
 
-        //Get the userId from the path parameter
+        //Get the paramters from the path parameter
         const userId = event.pathParameters.userId;
-
+        const compId = event.pathParameters.compId;
+        const timestamp = event.pathParameters.timeStamp;
+        const compId_timestamp = compId + "_" + timestamp
         //Instantiate the parameters that will be used for the get request
         //QueryInput doc: https://docs.aws.amazon.com/sdkforruby/api/Aws/DynamoDB/Types/QueryInput.html
         let params = AWS.DynamoDB.QueryInput = {
             TableName: EVALUATIONS_DDB_TABLE_NAME,
-            FilterExpression: "#userId = :id",
+            FilterExpression: "#userId = :id AND #cidts = :cidts",
             ExpressionAttributeNames: {
-                "#userId": "UserIdBeingEvaluated"
+                "#userId": "UserIdBeingEvaluated",
+                "#cidts": "CompetencyId_Timestamp"
             },
             ExpressionAttributeValues: {
-                ":id": userId
+                ":id": userId,
+                ":cidts": compId_timestamp
             }
             
         }
