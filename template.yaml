@@ -17,7 +17,7 @@ Resources:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
       CodeUri: functions/competencies/ # Where does the Lambda's JavaScript file live in the folder directory? Aka the path from this file to the JS file you want
-      Handler: app.lambdaHandler # {JS file name - .js} + . + {method name in that JS file}
+      Handler: get.lambdaHandler # {JS file name - .js} + . + {method name in that JS file}
       Runtime: nodejs12.x
       Events: # Answers "What events can trigger this Lambda?". In this case, it's an API call with a GET method to /competencies
         GetCompetencies:
@@ -25,12 +25,23 @@ Resources:
           Properties:
             Path: /competencies # What should the official API url be? It will be whatever you type here
             Method: get # Which HTTP method (get, post, delete, etc.) should will invoke this lambda when an API call is made at this path?
-  AddCompetenciesFunction:
-    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
-    Properties:
-      CodeUri: functions/competencies/
-      Handler: post.lambdaHandler
-
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+            # Add resources for DeleteComp
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref CompetenciesMasterDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref CompetenciesMasterDDBTable}
+      Environment:
+        Variables:
+          COMPETENCIES_DDB_TABLE_NAME: !Ref CompetenciesMasterDDBTable
   DeleteSpecificCompetencyFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -50,7 +61,7 @@ Resources:
             Action:
               - dynamodb:DeleteItem
               - dynamodb:GetItem
-            # Add resources for DelteComp
+            # Add resources for DeleteComp
             Resource:
               - !Sub
                 - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
@@ -61,6 +72,34 @@ Resources:
       Environment:
         Variables:
           COMPETENCIES_DDB_TABLE_NAME: !Ref CompetenciesMasterDDBTable
+  GetSpecificCompetencyFunction:
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/competencies/{competencyId}
+      Handler: get.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        GetSpecificCompetency:
+          Type: Api
+          Properties:
+            Path: /competencies/{competencyId}
+            Method: get
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref CompetenciesMasterDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref CompetenciesMasterDDBTable}
+      Environment:
+        Variables:
+          COMPETENCIES_DDB_TABLE_NAME: !Ref CompetenciesMasterDDBTable 
   AddCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -68,7 +107,7 @@ Resources:
       Handler: post.lambdaHandler
       Runtime: nodejs12.x
       Events:
-        GetCompetencies:
+        AddCompetencies:
           Type: Api
           Properties:
               Path: /competencies

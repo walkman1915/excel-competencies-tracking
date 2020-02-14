@@ -29,7 +29,7 @@ exports.lambdaHandler = async (event, context) => {
 				},
 			};
 			return response;
-         } else if (!/^\d+$/.test(competencyId)) {
+		} else if (!/^\d+$/.test(competencyId)) {
 			response = {
 				statusCode: 400,
 				body: "This request must contain a non-empty CompetencyId with only numeric characters. You entered : " + JSON.stringify(competencyId),
@@ -41,14 +41,13 @@ exports.lambdaHandler = async (event, context) => {
 		}
 
         // Check if an evaluation with the given parameters is in the database
-        const getResponse = await getCompetency(competencyId);
+        const competency = await getCompetency(competencyId);
 
-       
-        //If the response didn't have an item in it (nothing was found in the database), return a 404 (not found)
-        if (!("Item" in getResponse)) {
+		//If the response didn't have an item in it (nothing was found in the database), return a 404 (not found)
+        if (!("Item" in competency)) {
             response = {
                 statusCode: 404,
-                body: "A competency was not found with the given id  - " + competencyId,
+                body: "A competency was not found with the given id  - " + JSON.stringify(competencyId),
                 headers: {
                     'Access-Control-Allow-Origin': '*',
                 },
@@ -56,12 +55,9 @@ exports.lambdaHandler = async (event, context) => {
             return response;
         }
 
-        // Remove a competency from the database
-        await removeCompetency(competencyId);
-
         response = {
-            statusCode: 204,
-            body: "The competency with the following id has been deleted - " + competencyId,
+            statusCode: 200,
+            body: JSON.stringify(competency),
             headers: {
                 'Access-Control-Allow-Origin': '*',
             },
@@ -73,20 +69,6 @@ exports.lambdaHandler = async (event, context) => {
 
     return response;
 };
-
-/**
- * @param {Object} competencyId - the competencyId key that will be removed from the database
- * 
- * @returns {Object} object - a promise representing this delete request
- */
-function removeCompetency(competencyId) {
-    return ddb.delete({
-        TableName: COMPETENCIES_DDB_TABLE_NAME,
-        Key: {
-            "CompetencyId" : competencyId,
-        }
-    }).promise();
-}
 
 /**
  * @param {Object} competencyId - the competencyId key that will be removed from the database

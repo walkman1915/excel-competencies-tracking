@@ -9,3 +9,6 @@ samconfig.toml
 
 # Igonre Visual Studio files
 .vs/
+
+# Ignore Webstorm files
+.idea/
