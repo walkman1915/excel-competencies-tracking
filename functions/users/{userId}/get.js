@@ -18,12 +18,23 @@ const USERS_DDB_TABLE_NAME = process.env.USERS_DDB_TABLE_NAME; // Allows us to a
  */
 exports.lambdaHandler = async (event, context) => {
     try {
-        // TODO: data validation
+        // Information from the URL that is required to get a specific user
+        if (!("userId" in event.pathParameters) || event.pathParameters.userId == "") {
+            response = {
+				statusCode: 400,
+				body: "This request is missing a necessary path variable - UserID.",
+				headers: {
+					'Access-Control-Allow-Origin': '*',
+				},
+			}
+			return response;
+        }
         const userId = event.pathParameters.userId; // Get the userId from /users/{userId} path variable
 
+        // Query and get the specified user's info
         const user = await getSpecificUser(userId);
+
         var statusCode = 200;
-        
         // If the user object is empty, it means there was no data found for that user ID in the database
         if (isEmptyObject(user)) {
             statusCode = 204; // A 204 code represents that the action was successful but there is no content
