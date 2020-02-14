@@ -27,10 +27,11 @@ Resources:
             Method: get # Which HTTP method (get, post, delete, etc.) should will invoke this lambda when an API call is made at this path?
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+          - Sid: DynamoDBGetAndScanPolicy # Creates a specific, custom inline policy
             Effect: Allow
             Action:
               - dynamodb:GetItem
+              - dynamodb:Scan
             # Add resources for DeleteComp
             Resource:
               - !Sub
