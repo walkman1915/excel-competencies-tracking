@@ -225,7 +225,66 @@ Resources:
                 - { tableName: !Ref EvaluationsDDBTable}
       Environment:
         Variables:
-          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code  
+          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code
+  GetEvaluationScaleFunction: #Function for getting all of the evaluations in the table
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/evaluationScale/
+      Handler: get.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        GetEvaluationScale:
+          Type: Api
+          Properties:
+            Path: /evaluationScale
+            Method: get
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Scan
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref EvaluationScaleDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref EvaluationScaleDDBTable}
+      Environment:
+        Variables:
+          EVALUATION_SCALE_DDB_TABLE_NAME: !Ref EvaluationScaleDDBTable # Allows us to access the var "EVALUATION_SCALE_DDB_TABLE_NAME" in this lambda's javascript code
+  AddEvaluationScaleFunction:
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/evaluationScale/
+      Handler: post.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        AddEvaluationScale:
+          Type: Api
+          Properties:
+            Path: /evaluationScale
+            Method: post
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref EvaluationScaleDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref EvaluationScaleDDBTable}
+      Environment:
+        Variables:
+          EVALUATION_SCALE_DDB_TABLE_NAME: !Ref EvaluationScaleDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code
+
+     
   ############ DynamoDB Databases ############
   CompetenciesMasterDDBTable: # Master table to store info about each competency
     Type: AWS::DynamoDB::Table
