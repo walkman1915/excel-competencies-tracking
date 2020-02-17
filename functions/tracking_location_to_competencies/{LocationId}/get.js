@@ -23,7 +23,7 @@ exports.lambdaHandler = async (event, context) => {
         const requestBody = JSON.parse(event.body);
 
         // get id as a path parameter
-        const trackingLocationId = event.pathParameters.trackingLocationId; // Get the trackingLocationId from /tracking_location_to_competencies/{trackingLocationId} path variable
+        const trackingLocationId = event.pathParameters.locationId; // Get the trackingLocationId from /tracking_location_to_competencies/{trackingLocationId} path variable
 
         // log it for funsies
         console.log(trackingLocationId);

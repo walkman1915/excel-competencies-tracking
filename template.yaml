@@ -420,14 +420,14 @@ Resources:
   DeleteTrackingLocationToCompetenciesFunction: 
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking_location_to_competencies/
+      CodeUri: functions/tracking_location_to_competencies//{locationId}
       Handler: delete.lambdaHandler
       Runtime: nodejs12.x
       Events:
         DeleteEvaluation:
           Type: Api
           Properties:
-            Path: /TrackingLocationToCompetencies
+            Path: /TrackingLocationToCompetencies/{locationId}
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -449,14 +449,14 @@ Resources:
   GetSpecificTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking_location_to_competencies/{trackingLocationId}
+      CodeUri: functions/tracking_location_to_competencies/{locationId}
       Handler: get.lambdaHandler
       Runtime: nodejs12.x
       Events:
         GetCompetencies:
           Type: Api
           Properties:
-            Path: /TrackingLocationToCompetencies/{trackingLocationId}
+            Path: /TrackingLocationToCompetencies/{locationId}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:

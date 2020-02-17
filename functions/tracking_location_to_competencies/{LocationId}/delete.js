@@ -59,7 +59,7 @@ exports.lambdaHandler = async (event, context) => {
         //     "LocationName": locationName
         // }
 
-        const locationId = requestBody.LocationId;
+        const locationId = event.pathParameters.locationId;
 
         console.log(locationId);
 
