@@ -17,33 +17,17 @@ Formal record of a student's progress towards a competency.
 
 #### Coach
 
-## Authentication
+# Authentication
 
 To be determined.
 
-## API Calls
+# API Calls
 
-### Evalutaions 
+## Evalutaions 
 
-#### Adding an Evaluation
+### Useful Parameters
 
-You can add an evaluation by sending a POST request to the following address: <TBD>. In the body of the request there should be a JSON block of the following format. 
-  
-```json
- {
-   "UserId": "jdoe",
-   "CompetencyId": "T6",
-   "Year": "2020",
-   "Month": "2",
-   "Day": "28",
-   "UserIdEvaluator": "asmith",
-   "EvaluationScore": "3",
-   "Comments": "Wonderful student!",
-   "Evidence": "Assessment",
-   "Approved": "False”
-}
-```
-_Please see below for an explaination of each parameter used above._
+_The following data parameters describe the sort information contained in an Evaluation entry._
 
 __UserId__ : (String, Required) The identification number of the user being evaluated. Must be a student.
 
@@ -65,4 +49,53 @@ __Evidence__: (String, Required) The mode of data that led to the evaluation.
 
 __Approved__: (Boolean, Required) Indicates whether an administrator as approved this evaluation.
 
-Once a request has been recieved it will give back Status Code 200, input the data in our database, and return a JSON block matching the data was entered in the sent body.
+### Adding an Evaluation
+
+You can add an evaluation by sending a POST request to the following address: <TBD>. In the body of the request there should be a JSON block of the following format. All parameters specified as required above must be filled out in this request.
+```json
+ {
+   "UserId": "jdoe",
+   "CompetencyId": "T6",
+   "Year": "2020",
+   "Month": "2",
+   "Day": "28",
+   "UserIdEvaluator": "asmith",
+   "EvaluationScore": "3",
+   "Evidence": "Assessment",
+   "Approved": "False”
+}
+```
+Once a request has been recieved it will give back __Status Code 200__, input the data in our database, and return a JSON block matching the data was entered in the sent body. Such as the example below. Note an optional data parameter, "Comments" was defaulted to being empty.
+```json
+ {
+   "UserId": "jdoe",
+   "CompetencyId": "T6",
+   "Year": "2020",
+   "Month": "2",
+   "Day": "28",
+   "UserIdEvaluator": "asmith",
+   "EvaluationScore": "3",
+   "Comments": "",
+   "Evidence": "Assessment",
+   "Approved": "False”
+}
+```
+### Errors 
+
+If a required data field is missing, the request will return a __Status Code 400__:Bad Request and the body of this response will contain a detailed message about which parameter was missing, malformed, or of the wrong type. For example consider the following input, which is missing the required parameter "CompetencyId".
+```json
+ {
+   "UserId": "jdoe",
+   "Year": "2020",
+   "Month": "2",
+   "Day": "28",
+   "UserIdEvaluator": "asmith",
+   "EvaluationScore": "3",
+   "Evidence": "Assessment",
+   "Approved": "False”
+}
+```
+In addition to receiving a Status Code 400 response, the reponse's body would contain the following message.
+```
+  "Required body argument 'CompetencyId' was not specified"
+```
