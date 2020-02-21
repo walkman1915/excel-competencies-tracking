@@ -8,6 +8,7 @@ For quick access to the following sections, select the hyperlinks below.
 3. [API Calls For Users & User Relationships]()
 4. [API Calls For Competencies]()
 5. [API Calls For TrackingLocations]()
+6. [Full API Tree](#api-tree)
 
 ## Revelant Terms
 
@@ -48,7 +49,7 @@ _The following data parameters describe the sort information contained in an Eva
 
 - __UserIdEvaluator__: (String, Required) The identification number of the user evaluating. Must not be a student.
 
-- __EvaluationScore__: (String, Required)  The numeric score that user received in the evalutation. View [Evaluation Score Table]()for a list of qualitative and competency speficic descriptions of these scores.
+- __EvaluationScore__: (String, Required)  The numeric score that user received in the evalutation. View [Evaluation Score Table]() for a list of qualitative and competency speficic descriptions of these scores.
 
 - __Comments__: (String, Optional)  Additional comments made by evaluator.
 
@@ -89,7 +90,7 @@ Once a request has been recieved it will give back __Status Code 200__, input th
 ```
 ### Errors 
 
-If a required data field is missing, the request will return a __Status Code 400__:Bad Request and the body of this response will contain a detailed message about which parameter was missing, malformed, or of the wrong type. For example consider the following input, which is missing the required parameter "CompetencyId".
+If a required data field is missing, the request will return a __Status Code 400__: Bad Request and the body of this response will contain a detailed message about which parameter was missing, malformed, or of the wrong type. For example consider the following input, which is missing the required parameter "CompetencyId".
 ```json
  {
    "UserId": "jdoe",
@@ -105,4 +106,39 @@ If a required data field is missing, the request will return a __Status Code 400
 In addition to receiving a Status Code 400 response, the reponse's body would contain the following message.
 ```
   "Required body argument 'CompetencyId' was not specified"
+```
+[Back To Top](#excel-competencies-tracking)
+
+# API Tree
+```
+/competencies
+   GET  [Get all competencies]
+   POST [Add a new competency]
+   /{competencyId}
+       GET    [Get a specific competency given its id]
+       DELETE [Delete a specific competency given its id]
+/evaluations
+   GET  [Get all evaluations]
+   POST [Add a new evaluation]
+   /{userId}
+       GET  [Get all evaluations for a given specific user]
+       /{compId}
+           GET  [Get all evaluations for a given specific user and specific competency]
+           /{timeStamp}
+               GET    [Get all evaluations for a given specific user, specific competency, and specific time stamp]
+               DELETE [Delete all evaluations for a given specific user, specific competency, and specific time stamp]
+/evaluation_scale
+    GET   [Get the evaluation scale]
+    POST  [Add a new evaluation scale item]
+/tracking_locations_to_competencies
+    GET   [Get all tracking locations]
+    POST  [Add a new tracking location]
+    /{locationId}
+        GET    [Get a specific tracking locations given its id]
+        DELETE [Delete a specific tracking locations given its id]
+/users
+    POST   [Add a new user]
+    /{userID}
+        GET    [Get a specific user given their id]
+        DELETE [Delete a specific user given their id]
 ```
