@@ -29,25 +29,25 @@ To be determined.
 
 _The following data parameters describe the sort information contained in an Evaluation entry._
 
-__UserId__ : (String, Required) The identification number of the user being evaluated. Must be a student.
+- __UserId__ : (String, Required) The identification number of the user being evaluated. Must be a student.
 
-__CompetencyId__: (String, Required)  The identification tag of the competency being evaluated. View [Excel Tracking Table]() for a list of Competency Ids.
+- __CompetencyId__: (String, Required)  The identification tag of the competency being evaluated. View [Excel Tracking Table]() for a list of Competency Ids.
 
-__Year__: (String, Required)  Year this evaluation is being submitted for.
+- __Year__: (String, Required)  Year this evaluation is being submitted for.
 
-__Month__: (String, Required)  Month this evaluation is being submitted for.
+- __Month__: (String, Required)  Month this evaluation is being submitted for.
 
-__Day__: (String, Required)  Day this evaluation is being submitted for.
+- __Day__: (String, Required)  Day this evaluation is being submitted for.
 
-__UserIdEvaluator__: (String, Required) The identification number of the user evaluating. Must not be a student.
+- __UserIdEvaluator__: (String, Required) The identification number of the user evaluating. Must not be a student.
 
-__EvaluationScore__: (String, Required)  The numeric score that user received in the evalutation. View [Evaluation Score Table]()for a list of qualitative and competency speficic descriptions of these scores.
+- __EvaluationScore__: (String, Required)  The numeric score that user received in the evalutation. View [Evaluation Score Table]()for a list of qualitative and competency speficic descriptions of these scores.
 
-__Comments__: (String, Optional)  Additional comments made by evaluator.
+- __Comments__: (String, Optional)  Additional comments made by evaluator.
 
-__Evidence__: (String, Required) The mode of data that led to the evaluation. 
+- __Evidence__: (String, Required) The mode of data that led to the evaluation. 
 
-__Approved__: (Boolean, Required) Indicates whether an administrator as approved this evaluation.
+- __Approved__: (Boolean, Required) Indicates whether an administrator as approved this evaluation.
 
 ### Adding an Evaluation
 
