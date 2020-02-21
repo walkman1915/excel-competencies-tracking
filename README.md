@@ -2,6 +2,13 @@
 
 This describes the resources that make up the Excel Competencies Tracking System REST API v0. The Excel Program at Georgia Tech is a 4-year program for students with intellectual and developmental disabilities to develop life skills. This API provides a way to create, manage, export users and tracking data associated with the Excel Program.
 
+For quick access to the following Sections, select the hyperlinks below.
+1. [Revelant Terms](#revelant-terms)
+2. [API Calls For Evaluations](#evaluations)
+3. [API Calls For Users & User Relationships]()
+4. [API Calls For Competencies]()
+5. [API Calls For TrackingLocations)]()
+
 ## Revelant Terms
 
 #### Competency
@@ -23,7 +30,7 @@ To be determined.
 
 # API Calls
 
-## Evalutaions 
+## Evaluations 
 
 ### Useful Parameters
 
