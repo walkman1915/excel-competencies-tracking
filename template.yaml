@@ -13,6 +13,35 @@ Globals:
     Timeout: 3
 Resources:
   ############ Lambda Functions ############
+  PostAuthenticationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: auth/postauth
+      Handler: postauth.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        PreSignUp:
+          Type: Cognito
+          Properties:
+            UserPool: 
+              Ref: UserPool #Hardcoded right now for testing
+            Trigger: PostAuthentication
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref UsersDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref UsersDDBTable}
+      Environment:
+        Variables:
+          USERS_DDB_TABLE_NAME: !Ref UsersDDBTable # Allows us to access the var "USERS_DDB_TABLE_NAME" in this lambda's javascript code 
   PreSignUpFunction:
     Type: AWS::Serverless::Function
     Properties:

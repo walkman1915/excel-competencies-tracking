@@ -19,7 +19,7 @@ const COMPETENCIES_DDB_TABLE_NAME = process.env.COMPETENCIES_DDB_TABLE_NAME; // 
 exports.lambdaHandler = async (event, context) => {
     try {
         const competencyId = event.pathParameters.competencyId;
-
+        console.log(event.requestContext.authorizer.claims)
 		if (isEmptyObject(competencyId)) {
 			response = {
 				statusCode: 400,
