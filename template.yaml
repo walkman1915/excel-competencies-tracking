@@ -13,6 +13,35 @@ Globals:
     Timeout: 3
 Resources:
   ############ Lambda Functions ############
+  PreSignUpFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: auth/signup
+      Handler: signup.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        PreSignUp:
+          Type: Cognito
+          Properties:
+            UserPool: 
+              Ref: UserPool #Hardcoded right now for testing
+            Trigger: PreSignUp
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref UsersDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref UsersDDBTable}
+      Environment:
+        Variables:
+          USERS_DDB_TABLE_NAME: !Ref UsersDDBTable # Allows us to access the var "USERS_DDB_TABLE_NAME" in this lambda's javascript code 
   AddUserFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -598,6 +627,19 @@ Resources:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
       TableName: "EvaluationScale"
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: excel-tracking-user-pool
+      Schema:
+        - Name: name
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: role
+          AttributeDataType: String
+          Mutable: true
+          Required: false
 
 
 Outputs: # These outputs are just for our benefit if we want quick access to the ARNs or HTTP address.
