@@ -7,7 +7,7 @@ const EVALUATIONS_DDB_TABLE_NAME = process.env.EVALUATIONS_DDB_TABLE_NAME; // Al
 /*CONSTANT VALUES */
 const validEvalScores = ["0", "1", "2", "3", "4", "N"];
 const validEvidence = ["Direct observation", "Assessment", "Report from employer", "Report from coach"];
-
+const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
 
 /**
  *
@@ -23,8 +23,44 @@ const validEvidence = ["Direct observation", "Assessment", "Report from employer
  */
 exports.lambdaHandler = async (event, context) => {
     try {
-        const requestBody = JSON.parse(event.body);
+        console.log(event.requestContext);
+        if (!("authorizer" in event.requestContext) || !("claims" in event.requestContext.authorizer)) {
+            response = {
+                statusCode: 401,
+                body: "Authorization is missing from request",
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+            }
+            return response;
+        }
+        if (!("custom:role" in event.requestContext.authorizer.claims)) {
+            response = {
+                statusCode: 403,
+                body: "User does not have any assigned role",
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+            }
+            return response;
+        }
+        const role = event.requestContext.authorizer.claims['custom:role'];
+        if (!validRoles.includes(role)) {
+            response = {
+                statusCode: 403,
+                body: "User role is not permitted to create an evaluation role " + role 
+                + " must be one of " + validRoles.toString(),
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+            }
+            return response;
+        }
 
+
+
+        const requestBody = JSON.parse(event.body);
+        
         // Information from the POST request needed to add a new evaluation
         if (!("UserId" in requestBody) || requestBody.UserId == "") {
             response = {

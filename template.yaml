@@ -24,7 +24,7 @@ Resources:
           Type: Cognito
           Properties:
             UserPool: 
-              Ref: UserPool #Hardcoded right now for testing
+              Ref: UserPool   
             Trigger: PostAuthentication
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -669,6 +669,16 @@ Resources:
           AttributeDataType: String
           Mutable: true
           Required: false
+  CognitoAuthorizer:
+    Type: AWS::ApiGateway::Authorizer
+    Properties:
+      Type: COGNITO_USER_POOLS
+      Name: excel-tracking-authorizer
+      IdentitySource: method.request.header.Authorization
+      RestApiId: n74ypch107
+      ProviderARNs: 
+        - !GetAtt UserPool.Arn
+    
 
 
 Outputs: # These outputs are just for our benefit if we want quick access to the ARNs or HTTP address.
