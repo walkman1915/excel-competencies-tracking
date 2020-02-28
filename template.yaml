@@ -505,14 +505,14 @@ Resources:
   GetUsersForTrackingLocationFunction: # Function for getting all of the evaluations for a specific student
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/usersToTrackingLocation/{trackingLocationId}
+      CodeUri: functions/usersToTrackingLocation/{trackingLocationId}/{getAllUsersFlag}
       Handler: get.lambdaHandler
       Runtime: nodejs12.x
       Events:
         GetEvaluationsForUser:
           Type: Api
           Properties:
-            Path: /usersToTrackingLocation/{trackingLocationId}
+            Path: /usersToTrackingLocation/{trackingLocationId}/{getAllUsersFlag}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -531,7 +531,7 @@ Resources:
       Environment:
         Variables:
           USERS_TO_TRACKING_LOCATION_DDB_TABLE_NAME: !Ref UsersToTrackingLocationDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code          
-
+          USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
   ############ DynamoDB Databases ############
   CompetenciesMasterDDBTable: # Master table to store info about each competency
     Type: AWS::DynamoDB::Table

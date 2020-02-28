@@ -26,18 +26,19 @@ exports.lambdaHandler = async (event, context) => {
         console.log("Recieved Get Request");
 
         //Get the userId from the path parameter
-        const trackingLocationID = event.pathParameters.trackingLocationId;
+        const trackingLocationId = event.pathParameters.trackingLocationId;
+        const getAllUsersFlag = event.pathParameters.getAllUsersFlag;
 
         //Instantiate the parameters that will be used for the get request
         //QueryInput doc: https://docs.aws.amazon.com/sdkforruby/api/Aws/DynamoDB/Types/QueryInput.html
         let params = AWS.DynamoDB.QueryInput = {
             TableName: USERS_TO_TRACKING_LOCATION_DDB_TABLE_NAME,
-            FilterExpression: "#userId = :id",
+            FilterExpression: "#trackingLocationId = :id",
             ExpressionAttributeNames: {
-                "#userId": "UserIdBeingEvaluated"
+                "#trackingLocationId": "TrackingLocationIdBeingEvaluated"
             },
             ExpressionAttributeValues: {
-                ":id": userId
+                ":id": trackingLocationId
             }
             
         }
@@ -78,11 +79,17 @@ exports.lambdaHandler = async (event, context) => {
 
 
         //Use the provided parameters to make the get API request
-        const allEvals = await getEvals(params);
+        const allEvals = await getUsers(params);
         console.log(allEvals);
         // Generate the response body for a successful get
         
         let respBody = {};
+        
+        for (i = 0; i < allEvals.length; i++) {
+          if allEvals[i].
+          }
+        for item in allEvals:
+
         respBody.Items = allEvals.Items; //Gets the actual items from the call
 
         //If there are more items after the provided ones (for example if a limit is set and this does not go to the end of the table)
@@ -116,6 +123,6 @@ exports.lambdaHandler = async (event, context) => {
  * 
  * @returns {Object} object - a promise representing this get request
  */
-function getEvals(params) {
+function getUsers(params) {
     return ddb.scan(params).promise();
 }
