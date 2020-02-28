@@ -31,7 +31,7 @@ exports.lambdaHandler = async (event, context) => {
                 '#Role': 'Role',
             },
             ExpressionAttributeValues: {
-                ':Role': "mentor",
+                ':Role': "student",
             },
         };
         //Gets the query parameters from the get request, expecting possibly the limit (number per page)
@@ -67,11 +67,11 @@ exports.lambdaHandler = async (event, context) => {
         // params.Limit = 2;
 
         //Use the provided parameters to make the get API request
-        const allMentors = await getUsers(params);
+        const allStudents = await getStudents(params);
 
         // Generate the response body for a successful get
         let respBody = {};
-        respBody.Items = allMentors .Items; //Gets the actual items from the call
+        respBody.Items = allStudents.Items; //Gets the actual items from the call
 
         //If there are more items after the provided ones (for example if a limit is set and this does not go to the
         // end of the table) then the response will return a LastEvaluatedKey, which can be passed back into the next
@@ -79,9 +79,9 @@ exports.lambdaHandler = async (event, context) => {
         // encoded so that it can easily be passed back into the request to get the next page.  To get the next group of
         // items, it is expected that the user pass in the exact same key that is returned by the previous request as
         // the ESK parameter/
-        if ("LastEvaluatedKey" in allMentors ) {
+        if ("LastEvaluatedKey" in allStudents) {
             respBody.LastEvaluatedKey = Buffer.from(
-                JSON.stringify(allMentors .LastEvaluatedKey),'binary').toString('base64');
+                JSON.stringify(allStudents.LastEvaluatedKey),'binary').toString('base64');
         }
         //Construct the response
         response = {
@@ -106,6 +106,6 @@ exports.lambdaHandler = async (event, context) => {
  *
  * @returns {Object} object - a promise representing this get request
  */
-function getUsers(params) {
+function getStudents(params) {
     return ddb.scan(params).promise();
 }

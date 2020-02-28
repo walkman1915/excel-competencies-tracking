@@ -118,7 +118,7 @@ function checkAllStudentsExist(studentIds) {
     // check all the student users exist
 }
 
-function checkAllCompetencyIdsExist(studentIds) {
+function checkAllCompetencyIdsExist(competencyIds) {
     // check all the competency ids exist
 }
 

@@ -5,6 +5,7 @@ const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 // Allows us to access the environment variables defined in the Cloudformation template.
 const USERS_DDB_TABLE_NAME = process.env.USERS_DDB_TABLE_NAME;
+const USERS_TO_TRACKING_DDB_TABLE_NAME = process.env.USERS_TO_TRACKING_DDB_TABLE_NAME;
 
 /**
  *
@@ -20,19 +21,50 @@ const USERS_DDB_TABLE_NAME = process.env.USERS_DDB_TABLE_NAME;
  */
 exports.lambdaHandler = async (event, context) => {
     try {
-        const requestBody = JSON.parse(event.body);
+        if (!("userId" in event.pathParameters) || event.pathParameters.userId === "") {
+            response = {
+                statusCode: 400,
+                body: "This request is missing a necessary path variable - UserID.",
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+            };
+            return response;
+        }
+
+        const userId = event.pathParameters.userId; // Get the userId from /users/{userId} path variable
+        const getUser = await getSpecificUser(userId);
+
+        //If the response didn't have an item in it (nothing was found in the database), return a 404 (not found)
+        // because we can't add a non-exiting user to this table
+        if (!("Item" in getUser)) {
+            response = {
+                statusCode: 404,
+                body: "We can only get data for existing users to this table. There is no user with the entered id - " + userId,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+            };
+            return response;
+        } else if (getUser.Item.Role.toString().toLowerCase() !== "student") {
+            response = {
+                statusCode: 404,
+                body: "We can only get the mentor of a student. The user with the entered id - " + userId + ", is not a student.",
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                },
+            };
+            return response;
+        }
+
+        const tableEntry = await getUsersToTrackingTableEntry(userId);
+
+        //// get all the table entries ///////////////////////////////////////////////////////////////////////////////
 
         //Instantiate the parameters that will be used for the get request
         //QueryInput doc: https://docs.aws.amazon.com/sdkforruby/api/Aws/DynamoDB/Types/QueryInput.html
         let params = AWS.DynamoDB.QueryInput = {
-            TableName: USERS_DDB_TABLE_NAME,
-            FilterExpression: "#Role = :Role",
-            ExpressionAttributeNames: {
-                '#Role': 'Role',
-            },
-            ExpressionAttributeValues: {
-                ':Role': "mentor",
-            },
+            TableName: USERS_TO_TRACKING_DDB_TABLE_NAME
         };
         //Gets the query parameters from the get request, expecting possibly the limit (number per page)
         //or exclusiveStartKey (what element to start from in the case of pagination)
@@ -67,11 +99,8 @@ exports.lambdaHandler = async (event, context) => {
         // params.Limit = 2;
 
         //Use the provided parameters to make the get API request
-        const allMentors = await getUsers(params);
-
-        // Generate the response body for a successful get
+        const allUsersToTracking = await getAllUsersToTracking(params);
         let respBody = {};
-        respBody.Items = allMentors .Items; //Gets the actual items from the call
 
         //If there are more items after the provided ones (for example if a limit is set and this does not go to the
         // end of the table) then the response will return a LastEvaluatedKey, which can be passed back into the next
@@ -79,25 +108,74 @@ exports.lambdaHandler = async (event, context) => {
         // encoded so that it can easily be passed back into the request to get the next page.  To get the next group of
         // items, it is expected that the user pass in the exact same key that is returned by the previous request as
         // the ESK parameter/
-        if ("LastEvaluatedKey" in allMentors ) {
+        if ("LastEvaluatedKey" in allUsersToTracking) {
             respBody.LastEvaluatedKey = Buffer.from(
-                JSON.stringify(allMentors .LastEvaluatedKey),'binary').toString('base64');
+                JSON.stringify(allUsersToTracking.LastEvaluatedKey),'binary').toString('base64');
         }
-        //Construct the response
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        let mentors = [];
+        let allUsersToTrackingItems = allUsersToTracking.Items;
+
+        for(let i = 0; i < allUsersToTrackingItems.length; i++) {
+            let currentMentorsStudents = allUsersToTrackingItems[i].StudentIds;
+            for (let j = 0; j < currentMentorsStudents.length; j++) {
+               console.log(currentMentorsStudents[j]);
+               console.log(userId);
+               if (currentMentorsStudents[j].toString() === userId) {
+                   let mentorObj = await getSpecificUser(allUsersToTrackingItems[i].UserId);
+                    mentors.push(mentorObj);
+               }
+            }
+        }
+
         response = {
             statusCode: 200,
-            body: JSON.stringify(respBody),
+            body: JSON.stringify(mentors),
             headers: {
                 'Access-Control-Allow-Origin': '*',
             },
         };
+
     } catch (err) {
         console.log(err);
         return err;
     }
 
-    return response
+    return response;
 };
+
+/**
+ * Performs the API call on the table to get the results
+ *
+ * @param {string} userId - a JSON representation of the params for the get request
+ *
+ * @returns {Object} object - a promise representing this get request
+ */
+function getUsersToTrackingTableEntry(userId) {
+    return ddb.get({
+        TableName: USERS_TO_TRACKING_DDB_TABLE_NAME,
+        Key:{
+            "UserId": userId
+        }
+    }).promise();
+}
+
+/**
+ * Gets a specific user via user ID and returns the entire entry for that user in JSON format (defined in the Database Table Structures document)
+ * @param {string} userId - The ID of the user whose information you want to retrieve
+ *
+ * @returns {Promise} userPromise - Promise object representing a JSON object with all the data in this user's entry in the table,
+ *                                 or an empty object {} if no user with that ID was found
+ */
+function getSpecificUser(userId) {
+    return ddb.get({
+        TableName: USERS_DDB_TABLE_NAME,
+        Key:{
+            "UserId": userId
+        }
+    }).promise();
+}
 
 /**
  * Performs the API call on the table to get the results
@@ -106,6 +184,6 @@ exports.lambdaHandler = async (event, context) => {
  *
  * @returns {Object} object - a promise representing this get request
  */
-function getUsers(params) {
+function getAllUsersToTracking(params) {
     return ddb.scan(params).promise();
 }
