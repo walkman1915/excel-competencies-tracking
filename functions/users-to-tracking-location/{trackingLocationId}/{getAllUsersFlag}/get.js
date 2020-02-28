@@ -3,6 +3,7 @@ let response;
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const USERS_TO_TRACKING_LOCATION_DDB_TABLE_NAME = process.env.USERS_TO_TRACKING_LOCATION_DDB_TABLE_NAME; // Allows us to access the environment variables defined in the Cloudformation template
+const USERS_DDB_TABLE_NAME = process.env.USERS_DDB_TABLE_NAME;
 
 /**
  *
@@ -32,16 +33,8 @@ exports.lambdaHandler = async (event, context) => {
         //Instantiate the parameters that will be used for the get request
         //QueryInput doc: https://docs.aws.amazon.com/sdkforruby/api/Aws/DynamoDB/Types/QueryInput.html
         let params = AWS.DynamoDB.QueryInput = {
-            TableName: USERS_TO_TRACKING_LOCATION_DDB_TABLE_NAME,
-            FilterExpression: "#trackingLocationId = :id",
-            ExpressionAttributeNames: {
-                "#trackingLocationId": "TrackingLocationIdBeingEvaluated"
-            },
-            ExpressionAttributeValues: {
-                ":id": trackingLocationId
-            }
-            
-        }
+            TableName: USERS_TO_TRACKING_LOCATION_DDB_TABLE_NAME
+        };
         //Gets the query parameters from the get request, expecting possibly the limit (number per page)
         //or exclusiveStartKey (what element to start from in the case of pagination)
         const queryStringParameters = event.queryStringParameters
@@ -79,27 +72,41 @@ exports.lambdaHandler = async (event, context) => {
 
 
         //Use the provided parameters to make the get API request
-        const allEvals = await getUsers(params);
-        console.log(allEvals);
+        const allUsers = await getUsers(params);
+        console.log(allUsers);
         // Generate the response body for a successful get
         
         let respBody = {};
-        
-        for (i = 0; i < allEvals.length; i++) {
-          if allEvals[i].
-          }
-        for item in allEvals:
-
-        respBody.Items = allEvals.Items; //Gets the actual items from the call
 
         //If there are more items after the provided ones (for example if a limit is set and this does not go to the end of the table)
         //then the response will return a LastEvaluatedKey, which can be passed back into the next call
         //as a ExclusiveStartKey in order to get the next 'page' of results.  This key is stringified and base-64 encoded
         //so that it can easily be passed back into the request to get the next page.  To get the next group of items,
         //it is expected that the user pass in the exact same key that is returned by the previous request as the ESK parameter
-        if ("LastEvaluatedKey" in allEvals) {
-            respBody.LastEvaluatedKey = Buffer.from(JSON.stringify(allEvals.LastEvaluatedKey),'binary').toString('base64');
+        if ("LastEvaluatedKey" in allUsers) {
+            respBody.LastEvaluatedKey = Buffer.from(JSON.stringify(allUsers.LastEvaluatedKey),'binary').toString('base64');
         }
+
+        //--------------------------------------------------------------------
+        //Filtering through returned Users to see if they have the desired competency ID
+        let userIds = [];
+        let allUsersToTrackingItems = allUsers.Items;
+
+
+        for(let i = 0; i < allUsersToTrackingItems.length; i++) {
+            
+
+
+
+        }
+
+
+
+
+
+
+
+
         //Construct the response
         response = {
             statusCode: 200,
