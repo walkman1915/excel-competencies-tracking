@@ -505,14 +505,14 @@ Resources:
   GetUsersForTrackingLocationFunction: # Function for getting all of the evaluations for a specific student
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/usersToTrackingLocation/{trackingLocationId}/{getAllUsersFlag}
+      CodeUri: functions/users-to-tracking-location/{trackingLocationId}/{getAllUsersFlag}
       Handler: get.lambdaHandler
       Runtime: nodejs12.x
       Events:
         GetEvaluationsForUser:
           Type: Api
           Properties:
-            Path: /usersToTrackingLocation/{trackingLocationId}/{getAllUsersFlag}
+            Path: /users-to-tracking-location/{trackingLocationId}/{getAllUsersFlag}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:

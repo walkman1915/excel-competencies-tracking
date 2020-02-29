@@ -94,10 +94,20 @@ exports.lambdaHandler = async (event, context) => {
 
 
         for(let i = 0; i < allUsersToTrackingItems.length; i++) {
-            
+            let currentTrackingLocations = allUsersToTrackingItems[i].LocationIds;
+            for (let j = 0; j < currentTrackingLocations.length; j++) {
+                console.log(currentTrackingLocations[j]);
+                console.log(trackingLocationId);
+                if (currentTrackingLocations[j].toString()== trackingLocationId) {
+                    if (getAllUsersFlag == "True") {
+                        let userObject = await getSpecificUser(allUsersToTrackingItems[i].UserId);
+                        userIds.push(userObject)
+                    } else {
+                        userIds.push(allUsersToTrackingItems[i].UserId);
 
-
-
+                    }
+                }
+            }
         }
 
 
@@ -132,4 +142,20 @@ exports.lambdaHandler = async (event, context) => {
  */
 function getUsers(params) {
     return ddb.scan(params).promise();
+}
+
+/**
+ * Gets a specific user via user ID and returns the entire entry for that user in JSON format (defined in the Database Table Structures document)
+ * @param {string} userId - The ID of the user whose information you want to retrieve
+ *
+ * @returns {Promise} userPromise - Promise object representing a JSON object with all the data in this user's entry in the table,
+ *                                 or an empty object {} if no user with that ID was found
+ */
+function getSpecificUser(userId) {
+    return ddb.get({
+        TableName: USERS_DDB_TABLE_NAME,
+        Key:{
+            "UserId": userId
+        }
+    }).promise();
 }
