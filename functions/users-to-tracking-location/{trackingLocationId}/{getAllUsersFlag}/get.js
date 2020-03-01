@@ -92,7 +92,6 @@ exports.lambdaHandler = async (event, context) => {
         let userIds = [];
         let allUsersToTrackingItems = allUsers.Items;
 
-
         for(let i = 0; i < allUsersToTrackingItems.length; i++) {
             let currentTrackingLocations = allUsersToTrackingItems[i].LocationIds;
             for (let j = 0; j < currentTrackingLocations.length; j++) {
@@ -110,17 +109,10 @@ exports.lambdaHandler = async (event, context) => {
             }
         }
 
-
-
-
-
-
-
-
         //Construct the response
         response = {
             statusCode: 200,
-            body: JSON.stringify(respBody),
+            body: JSON.stringify(userIds),
             headers: {
                 'Access-Control-Allow-Origin': '*',
             },
