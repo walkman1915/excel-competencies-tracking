@@ -49,7 +49,7 @@ exports.lambdaHandler = async (event, context) => {
 
 
         // this is a mentor so we should have data in the StudentIds parameter only
-        if (getUser.Item.Role.toString().toLowerCase() === "mentor") {
+        if (getUser.Item.Role.toString().toLowerCase() === "Mentor") {
             if (!("StudentIds" in requestBody) || requestBody.StudentIds === "") {
                 return createMissingParameterErrorResponse("StudentIds");
             }
@@ -78,8 +78,8 @@ exports.lambdaHandler = async (event, context) => {
             if (!allExist) {
                 response = {
                     statusCode: 404,
-                    body: "We can only add existing location locations to this table. The location list for this user " +
-                        "included nonexistent tracking locations.",
+                    body: "We can only add existing location locations to this table. The location list for this user "
+                        + "included nonexistent tracking locations.",
                     headers: {
                         'Access-Control-Allow-Origin': '*',
                     },
