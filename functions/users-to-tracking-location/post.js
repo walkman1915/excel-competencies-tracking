@@ -47,17 +47,19 @@ exports.lambdaHandler = async (event, context) => {
             return response;
         }
 
-        /*
+
         // this is a mentor so we should have data in the StudentIds parameter only
         if (getUser.Item.Role.toString().toLowerCase() === "mentor") {
             if (!("StudentIds" in requestBody) || requestBody.StudentIds === "") {
                 return createMissingParameterErrorResponse("StudentIds");
             }
-            if (!checkAllStudentsExist(requestBody.StudentIds)) {
+            let allExist = await checkAllStudentsExist(requestBody.StudentIds);
+            console.log(allExist);
+            if (!allExist) {
                 response = {
                     statusCode: 404,
                     body: "We can only add existing users to this table. The student list for this mentor included " +
-                        "nonexistent students or users that were not students",
+                        "nonexistent users.",
                     headers: {
                         'Access-Control-Allow-Origin': '*',
                     },
@@ -71,11 +73,13 @@ exports.lambdaHandler = async (event, context) => {
             if (!("LocationIds" in requestBody) || requestBody.LocationIds === "") {
                 return createMissingParameterErrorResponse("LocationIds");
             }
-            if (!checkAllLocationIdsExist(requestBody.LocationIds)) {
+            let allExist = await checkAllLocationIdsExist(requestBody.LocationIds);
+            console.log(allExist);
+            if (!allExist) {
                 response = {
                     statusCode: 404,
                     body: "We can only add existing location locations to this table. The location list for this user " +
-                        "included nonexistent location locations",
+                        "included nonexistent tracking locations.",
                     headers: {
                         'Access-Control-Allow-Origin': '*',
                     },
@@ -85,24 +89,13 @@ exports.lambdaHandler = async (event, context) => {
             locationIds = requestBody.LocationIds;
             studentIds = null;
         }
-        */
-        if (!("LocationIds" in requestBody) || requestBody.LocationIds === "") {
-            locationIds = null;
-        } else {
-            locationIds = requestBody.LocationIds;
-        }
-
-        if (!("StudentIds" in requestBody) || requestBody.StudentIds === "") {
-            studentIds = null;
-        } else {
-            studentIds = requestBody.StudentIds;
-        }
 
         const user_to_tracking = {
             UserId: userId,
             LocationIds: locationIds,
             StudentIds: studentIds
         };
+
         await addUserToTracking(user_to_tracking);
 
         // Generate the response for a successful post
@@ -139,15 +132,16 @@ function getSpecificUser(userId) {
 
 
 /**
- * @param {List} studentIds- students being added to a mentor
+ * @param {Array} studentIds- students being added to a mentor
  *
  * @returns {Boolean} if all the students's existed
  */
 async function checkAllStudentsExist(studentIds) {
     // check all the student users exist
     for(let i = 0; i < studentIds.length; i++) {
+        console.log("checking user " + studentIds[i]);
         let currStudent = await getSpecificUser(studentIds[i]);
-        if (!("Item" in currStudent) || currStudent.Role.toString().toLowerCase() === "student") {
+        if (!("Item" in currStudent)) {
             return false;
         }
     }
@@ -164,7 +158,7 @@ function getSpecificTrackingLocation(locationId) {
 }
 
 /**
- * @param {List} locationIds- locations being added to a student
+ * @param {Array} locationIds- locations being added to a student
  *
  * @returns {Boolean} if all the tracking locations existed
  */
@@ -172,7 +166,7 @@ async function checkAllLocationIdsExist(locationIds) {
     // check all the competency ids exist
     for(let i = 0; i < locationIds.length; i++) {
         let currTrackingLocation = await getSpecificTrackingLocation(locationIds[i]);
-        if (!"Item" in currTrackingLocation) {
+        if (!("Item" in currTrackingLocation)) {
             return false;
         }
     }
