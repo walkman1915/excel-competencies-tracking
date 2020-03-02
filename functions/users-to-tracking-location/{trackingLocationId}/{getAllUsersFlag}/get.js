@@ -26,7 +26,7 @@ exports.lambdaHandler = async (event, context) => {
         //Log the received get request
         console.log("Recieved Get Request");
 
-        //Get the userId from the path parameter
+        //Get the trackingLocationId and getAllUsersFlag from the path parameter
         const trackingLocationId = event.pathParameters.trackingLocationId;
         const getAllUsersFlag = event.pathParameters.getAllUsersFlag;
 
@@ -97,7 +97,7 @@ exports.lambdaHandler = async (event, context) => {
             for (let j = 0; j < currentTrackingLocations.length; j++) {
                 console.log(currentTrackingLocations[j]);
                 console.log(trackingLocationId);
-                if (currentTrackingLocations[j].toString()== trackingLocationId) {
+                if (currentTrackingLocations[j].toString() == trackingLocationId) {
                     if (getAllUsersFlag == "True") {
                         let userObject = await getSpecificUser(allUsersToTrackingItems[i].UserId);
                         userIds.push(userObject)
