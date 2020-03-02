@@ -95,13 +95,18 @@ exports.lambdaHandler = async (event, context) => {
         for(let i = 0; i < allUsersToTrackingItems.length; i++) {
             let currentTrackingLocations = allUsersToTrackingItems[i].LocationIds;
             for (let j = 0; j < currentTrackingLocations.length; j++) {
-                console.log(currentTrackingLocations[j]);
-                console.log(trackingLocationId);
-                if (currentTrackingLocations[j].toString() === trackingLocationId) {
-                    if (getAllUsersFlag === "True") {
+                console.log("Current tracking location being examined:" + currentTrackingLocations[j]);
+                console.log("Passed in id:" + trackingLocationId);
+                console.log("Passed in id with toString: " + trackingLocationId.toString());
+
+                if (currentTrackingLocations[j].toString() == trackingLocationId) {
+                    console.log("Entered tracking location comparison due to them being equal")
+                    if (getAllUsersFlag == "True") {
+                        console.log("User object is being retrieved")
                         let userObject = await getSpecificUser(allUsersToTrackingItems[i].UserId);
                         userIds.push(userObject);
                     } else {
+                        console.log("User id is being retrieved")
                         userIds.push(allUsersToTrackingItems[i].UserId);
 
                     }
