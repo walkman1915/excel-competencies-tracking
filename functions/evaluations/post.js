@@ -24,37 +24,13 @@ const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
 exports.lambdaHandler = async (event, context) => {
     try {
         console.log(event.requestContext);
-        if (!("authorizer" in event.requestContext) || !("claims" in event.requestContext.authorizer)) {
-            response = {
-                statusCode: 401,
-                body: "Authorization is missing from request",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
+        let indicator = verifyAuthorizerExistence(event);
+        if (indicator != null) {
+            return indicator;
         }
-        if (!("custom:role" in event.requestContext.authorizer.claims)) {
-            response = {
-                statusCode: 403,
-                body: "User does not have any assigned role",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
-        const role = event.requestContext.authorizer.claims['custom:role'];
-        if (!validRoles.includes(role)) {
-            response = {
-                statusCode: 403,
-                body: "User role is not permitted to create an evaluation role " + role 
-                + " must be one of " + validRoles.toString(),
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
+        indicator = verifyValidRole(event, validRoles);
+        if (indicator != null) {
+            return indicator;
         }
 
 
@@ -266,4 +242,50 @@ function addEval(eval) {
         TableName: EVALUATIONS_DDB_TABLE_NAME,
         Item: eval,
     }).promise();
+}
+
+/**
+ * Verifies that the event contains an authorizer with some claims
+ * @param {Object} event the event object from the lambda
+ * @returns the error response that should be returned if the authorizer is incorrect,
+ * else returns null to indicate success
+ */
+function verifyAuthorizerExistence(event) {
+    if (!("authorizer" in event.requestContext) || !("claims" in event.requestContext.authorizer)) {
+        response = {
+            statusCode: 401,
+            body: "Authorization is missing from request",
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
+        }
+        return response;
+    }
+    return null;
+}
+
+function verifyValidRole(event, validRoles) {
+    if (!("custom:role" in event.requestContext.authorizer.claims)) {
+        response = {
+            statusCode: 403,
+            body: "User does not have any assigned role",
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
+        }
+        return response;
+    }
+    const role = event.requestContext.authorizer.claims['custom:role'];
+    if (!validRoles.includes(role)) {
+        response = {
+            statusCode: 403,
+            body: "User role is not permitted to perform this action. Role " + role 
+            + " must be one of " + validRoles.toString(),
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+            },
+        }
+        return response;
+    }
+    return null;
 }
