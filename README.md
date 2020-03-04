@@ -10,7 +10,7 @@ For quick access to the following sections, select the hyperlinks below.
 5. [API Calls For TrackingLocations]()
 6. [Full API Tree](#api-tree)
 
-## Revelant Terms
+## Relevant Terms
 
 #### Competency
 A demonstratable skill or knowledge achieved by a student. Each competency is associated with a domain and has a fixed evaluation schedule. Professors, __mentors__, and __coaches__ can input competency evaluations for students.
