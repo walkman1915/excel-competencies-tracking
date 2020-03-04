@@ -43,7 +43,7 @@ _The following data parameters describe the sort information contained in an Eva
 
 - __Year__: (String, Required)  Year this evaluation is being submitted for.
 
-- __Month__: (String, Required)  Month this evaluation is being submitted for.
+- __Month__: (String, Required)  Month this evaluation is being submitted for.  This is indexed at 0, so month 0 is January, 1 is February, etc.
 
 - __Day__: (String, Required)  Day this evaluation is being submitted for.
 
@@ -73,7 +73,7 @@ You can add an evaluation by sending a POST request to the following address: <T
    "Approved": "False”
 }
 ```
-Once a request has been recieved it will give back __Status Code 200__, input the data in our database, and return a JSON block matching the data was entered in the sent body. Such as the example below. Note an optional data parameter, "Comments" was defaulted to being empty.
+Once a request has been recieved it will give back __Status Code 201__, input the data in our database, and return a JSON block matching the data was entered in the sent body. Such as the example below. Note an optional data parameter, "Comments" was defaulted to being empty.
 ```json
  {
    "UserId": "jdoe",
