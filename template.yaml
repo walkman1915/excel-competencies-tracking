@@ -715,14 +715,14 @@ Resources:
   DeleteUserToTrackingLocationFunction: # Function for getting all users who are mentors
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/users-to-tracking-location/{userId}
+      CodeUri: functions/users-to-tracking-location/users/{userId}
       Handler: delete.lambdaHandler
       Runtime: nodejs12.x
       Events:
         GetEvaluationsForUser:
           Type: Api
           Properties:
-            Path: /users-to-tracking-location/{userId}
+            Path: /users-to-tracking-location/users/{userId}
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
