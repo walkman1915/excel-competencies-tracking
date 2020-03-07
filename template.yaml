@@ -18,6 +18,8 @@ Resources:
     Properties:
       CodeUri: functions/users/
       Handler: post.lambdaHandler
+      Layers:
+        - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         GetCompetencies:
@@ -46,6 +48,8 @@ Resources:
     Properties:
       CodeUri: functions/evaluations/
       Handler: post.lambdaHandler
+      Layers:
+        - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         AddEvaluation:
@@ -248,6 +252,8 @@ Resources:
     Properties:
       CodeUri: functions/evaluationScale/
       Handler: post.lambdaHandler
+      Layers:
+        - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         AddEvaluationScale:
@@ -364,6 +370,8 @@ Resources:
     Properties:
       CodeUri: functions/competencies/
       Handler: post.lambdaHandler
+      Layers:
+        - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         AddCompetencies:
@@ -392,6 +400,8 @@ Resources:
     Properties:
       CodeUri: functions/tracking_location_to_competencies/
       Handler: post.lambdaHandler
+      Layers:
+        - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         AddTrackingLocationToCompetencies:
@@ -644,6 +654,8 @@ Resources:
     Properties:
       CodeUri: functions/users-to-tracking-location
       Handler: post.lambdaHandler
+      Layers:
+        - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         GetEvaluationsForUser:
@@ -770,6 +782,14 @@ Resources:
       Environment:
         Variables:
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
+  DataValidation:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+        LayerName: sam-app-common-layer
+        Description: Data validation for other requests
+        ContentUri: functions/validation/
+        CompatibleRuntimes:
+          - nodejs12.x
 
 
 

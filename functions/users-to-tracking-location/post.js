@@ -1,8 +1,12 @@
 let response;
 
+const validate = require('/opt/validate');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 // Allows us to access the environment variables defined in the Cloudformation template
+
+/* CONSTANTS */
+const REQUIRED_ARGS = ["UserId"];
 const USERS_TO_TRACKING_DDB_TABLE_NAME = process.env.USERS_TO_TRACKING_DDB_TABLE_NAME;
 const USERS_DDB_TABLE_NAME = process.env.USERS_DDB_TABLE_NAME;
 const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME = process.env.TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME;
@@ -22,10 +26,13 @@ exports.lambdaHandler = async (event, context) => {
     try {
         const requestBody = JSON.parse(event.body);
 
-        // Information from the POST request needed to add a new user
-        if (!("UserId" in requestBody) || requestBody.UserId === "") {
-            return createMissingParameterErrorResponse("UserId");
-        }
+        // check that each required field is valid
+        for (i = 0; i < REQUIRED_ARGS.length; i++) {
+            ret = validate.validateField(requestBody, REQUIRED_ARGS[i]);
+            if (ret != null) {
+                return ret;
+            }
+		}
 
         const userId = requestBody.UserId;
         let studentIds;
@@ -35,24 +42,24 @@ exports.lambdaHandler = async (event, context) => {
         const getUser = await getSpecificUser(userId);
 
         //If the response didn't have an item in it (nothing was found in the database), return a 404 (not found)
-        // because we can't add a non-exiting user to this table
-        if (!("Item" in getUser)) {
-            response = {
-                statusCode: 404,
-                body: "We can only add existing users to this table. There is no user with the entered id - " + userId,
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            };
-            return response;
+        // because we can't add a non-existing user to this table
+        ret = validate.validateField(getUser, "Item");
+        if (ret != null) {
+            return ret;
         }
 
+        // Shouldn't this compare lowercase "mentor"?
 
         // this is a mentor so we should have data in the StudentIds parameter only
         if (getUser.Item.Role.toString().toLowerCase() === "Mentor") {
-            if (!("StudentIds" in requestBody) || requestBody.StudentIds === "") {
-                return createMissingParameterErrorResponse("StudentIds");
+
+            // validating StudentIds
+            ret = validate.validateField(requestBody, "StudentIds");
+            if (ret != null) {
+                return ret;
             }
+
+
             let allExist = await checkAllStudentsExist(requestBody.StudentIds);
             console.log(allExist);
             if (!allExist) {
@@ -70,9 +77,13 @@ exports.lambdaHandler = async (event, context) => {
             studentIds = requestBody.StudentIds;
         }
         else {
-            if (!("LocationIds" in requestBody) || requestBody.LocationIds === "") {
-                return createMissingParameterErrorResponse("LocationIds");
+
+            // validating StudentIds
+            ret = validate.validateField(requestBody, "LocationIds");
+            if (ret != null) {
+                return ret;
             }
+
             let allExist = await checkAllLocationIdsExist(requestBody.LocationIds);
             console.log(allExist);
             if (!allExist) {
@@ -185,15 +196,4 @@ function addUserToTracking(userToTracking) {
         TableName: USERS_TO_TRACKING_DDB_TABLE_NAME,
         Item: userToTracking,
     }).promise();
-}
-
-function createMissingParameterErrorResponse(missingParameter) {
-    response = {
-        statusCode: 400,
-        body: "This request is missing a necessary parameter - " + missingParameter + ".",
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-        },
-    };
-    return response;
 }

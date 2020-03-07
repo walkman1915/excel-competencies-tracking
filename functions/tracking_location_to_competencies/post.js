@@ -1,8 +1,14 @@
 let response;
 
+const validate = require('/opt/validate');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
+
+/* CONSTANTS */
 const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB = process.env.TRACKING_LOCATIONS_TO_COMPETENCIES_DDB; // Allows us to access the environment variables defined in the Cloudformation template
+
+/* CONSTANTS */
+const REQUIRED_ARGS = ["LocationName", "CompetencyIds"];
 
 /**
  *
@@ -22,33 +28,20 @@ exports.lambdaHandler = async (event, context) => {
         console.log("Request received!");
         const requestBody = JSON.parse(event.body);
 
+        // check that each required field is valid
+        for (i = 0; i < REQUIRED_ARGS.length; i++) {
+            ret = validate.validateField(requestBody, REQUIRED_ARGS[i]);
+            if (ret != null) {
+                return ret;
+            }
+        }
+        
         // console.log(requestBody);
 
         // @todo add validation for advising?
 
-        // Information from the POST request needed to add a new tracking location to competency
-        if (!("LocationName" in requestBody) || requestBody.LocationName == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'LocationName' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
         const locationName = requestBody.LocationName;
 
-        if (!("CompetencyIds" in requestBody) || requestBody.CompetencyIds == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'CompetencyIds' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
         const competencyIds = requestBody.CompetencyIds;
 
         let params = AWS.DynamoDB.QueryInput = {
