@@ -141,4 +141,22 @@ In addition to receiving a Status Code 400 response, the reponse's body would co
     /{userID}
         GET    [Get a specific user given their id]
         DELETE [Delete a specific user given their id]
+    /mentors
+        GET    [Get a all users that are mentors]
+        /{userId}
+           /students
+               GET [Get all students associated with the mentor who has the passed in userId]
+    /students
+        /{userId}
+           /mentors
+               GET [Get all mentors associated with the student who has the passed in userId]
+/users-to-tracking-location
+    POST   [Add a new user to tracking location relationship]
+    GET    [Get all user to tracking location relationships]
+    /{trackingLocationId}
+        /{getAllUsersFlag} [If "true" will get user objects, otherwise user ids]
+            GET    [Get a all users being tracked in a  give tracking location]
+    /users
+        /{userId}
+           DELETE [Delete a specific user to tracking location relationship]
 ```
