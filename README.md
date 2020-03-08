@@ -5,9 +5,9 @@ This describes the resources that make up the Excel Competencies Tracking System
 For quick access to the following sections, select the hyperlinks below.
 1. [Revelant Terms](#revelant-terms)
 2. [API Calls For Evaluations](#evaluations)
-3. [API Calls For Users & User Relationships]()
-4. [API Calls For Competencies]()
-5. [API Calls For TrackingLocations]()
+3. [API Calls For Users & User Relationships](#users-and-user-relationships)
+4. [API Calls For Competencies](#competencies)
+5. [API Calls For TrackingLocations](#tracking-locations)
 6. [Full API Tree](#api-tree)
 
 ## Relevant Terms
@@ -107,6 +107,82 @@ In addition to receiving a Status Code 400 response, the reponse's body would co
 ```
   "Required body argument 'CompetencyId' was not specified"
 ```
+[Back To Top](#excel-competencies-tracking)
+
+## Users and User Relationships
+
+[Back To Top](#excel-competencies-tracking)
+
+## Competencies
+
+### Useful Parameters
+
+_The following data parameters describe the sort information contained in a Competencies entry._
+
+- __CompetencyId__ : (String, Required) Unique identifier for this competency. Will not change even if the CompetencyTitle changes. Should only contain numeric digits.
+
+- __CompetencyTitle__: (String, Required)  The human-readable title for this competency.
+
+- __Domain__: (String, Required)  The main category of this competency. Permissible Values Include: {"TRANSPORTATION", "EMPLOYMENT_AND_CAREERS", "HEALTH_AND_WELLNESS", "FINANCIAL_LITERACY", "HOUSING", "SOCIAL_AND_LEADERSHIP", "TECHNOLOGY_AND_COMMUNICATION"}
+
+- __Subcategory__: (String, Required)  Each domain can have unique subcategories.
+
+- __Difficulty__: (String, Required)  How hard this competency is. Permissible Values Include : {"1" (basic), "2" "2" (intermediate), "3" (advanced), "4" (expert)}
+
+- __EvaluationFrequency__: (String, Required) How often this competency is evaluated. Permissible Values Include: {"MONTHLY", "SEMESTERLY", "YEARLY"}
+
+### Adding an Competency
+
+You can add a competency by sending a POST request to the following address: "<endpoint_url>/competencies". In the body of the request there should be a JSON block of the following format. All parameters specified as required above must be filled out in this request.
+```json
+ {
+	  "CompetencyId" : "2",
+	  "CompetencyTitle" : "Calling an Uber/Lyft",
+	  "Domain": "TRANSPORTATION",
+	  "Subcategory" : "Modes of Transportation",
+	  "Difficulty" : "2",
+	  "EvaluationFrequency" : "SEMESTERLY"
+}
+```
+Once a request has been recieved it will give back __Status Code 201__, input the data in our database, and return a JSON block matching the data was entered in the sent body. 
+ 
+### Retrieving Competencies
+
+All competencies can be retrieved with a GET request at the "<endpoint_url>/competencies" level. The response will contain a list of JSON values representing each competency in the master competencyies table list.
+
+To retrieve a specific competency, we make a GET request at "<endpoint_url>/competencies/{competencyId}" level. To clarify, {competencyId} should be replaced with the competenctyId of the competency we want to retrieve. For example, a GET request to ""<endpoint_url>/competencies/2" will retrieve the competency with the id "2" or return a __Status Code 404__: Resource Not Found error if there does not exist a competency with the if "2".
+
+When competencies are succesfully retrieved the resonse will have a __Status Code 200__.
+
+### Removing Competencies
+
+To delete a specific competency, we make a DELETE request at "<endpoint_url>/competencies/{competencyId}" level. To clarify, {competencyId} should be replaced with the competenctyId of the competency we want to retrieve. For example, a DELETE request to ""<endpoint_url>/competencies/2" will remove the competency with the id "2" or return a __Status Code 404__: Resource Not Found error if there does not exist a competency with the if "2".
+
+When a competency is sucessfully deleted the response will have a __Status Code 204__.
+
+### Errors 
+
+If a required data field is missing or incorrect, the request will return a __Status Code 400__: Bad Request and the body of this response will contain a detailed message about which parameter was missing, malformed, or of the wrong type. For example consider the following input to a POST request (adding a competency), which is missing the required parameter "CompetencyId".
+```json
+ {
+	  "CompetencyTitle" : "Calling an Uber/Lyft",
+	  "Domain": "TRANSPORTATION",
+	  "Subcategory" : "Modes of Transportation",
+	  "Difficulty" : "2",
+	  "EvaluationFrequency" : "SEMESTERLY"
+}
+```
+In addition to receiving a Status Code 400 response, the reponse's body would contain the following message.
+```
+  "Required body argument 'CompetencyId' was not specified"
+```
+
+If a competency is not found during a GET or DELETE request, the reponse will be a __Status Code 404__: Resource not found.
+
+[Back To Top](#excel-competencies-tracking)
+
+## Tracking Locations
+
 [Back To Top](#excel-competencies-tracking)
 
 # API Tree
