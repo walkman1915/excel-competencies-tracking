@@ -8,7 +8,8 @@ For quick access to the following sections, select the hyperlinks below.
 3. [API Calls For Users & User Relationships](#users-and-user-relationships)
 4. [API Calls For Competencies](#competencies)
 5. [API Calls For TrackingLocations](#tracking-locations)
-6. [Full API Tree](#api-tree)
+6. [API Calls For User Association with Tracking Locations and Other Users](#user-association-with-tracking-locations-and-other-users)
+7. [Full API Tree](#api-tree)
 
 ## Relevant Terms
 
@@ -127,7 +128,7 @@ _The following data parameters describe the sort information contained in a Comp
 
 - __Subcategory__: (String, Required)  Each domain can have unique subcategories.
 
-- __Difficulty__: (String, Required)  How hard this competency is. Permissible Values Include : {"1" (basic), "2" "2" (intermediate), "3" (advanced), "4" (expert)}
+- __Difficulty__: (String, Required)  How hard this competency is. Permissible Values Include : {"1" (basic), "2" (intermediate), "3" (advanced), "4" (expert)}
 
 - __EvaluationFrequency__: (String, Required) How often this competency is evaluated. Permissible Values Include: {"MONTHLY", "SEMESTERLY", "YEARLY"}
 
@@ -181,7 +182,88 @@ If a competency is not found during a GET or DELETE request, the reponse will be
 
 [Back To Top](#excel-competencies-tracking)
 
-## Tracking Locations
+## Tracking Locations 
+
+[Back To Top](#excel-competencies-tracking)
+
+## User Association with Tracking Locations and Other Users
+
+### Useful Parameters
+
+_The following data parameters describe the sort information contained in TrackingLocation entry._
+
+- __UserId__ : (String, Required) Unique ID of the user being tracked in a given location.
+
+- __LocationIds__: (String, Required for __non-mentors__) A list of LocationIds that a user is currently being tracked in. Only non-mentor users can have LocationIds associated with them.
+
+- __StudentIds__: (String, Required for __mentors__) If this user is a mentor or peer coach, this is a list of all students that this mentor/peer coach is assigned to. If this user is something else, this field will be empty
+
+### Associating a Student/Teacher with Tracking Locations 
+
+You can create this relationship by sending a __POST__ request to the following address: __"<endpoint_url>/user-to-tracking-location"__. In the body of the request there should be a JSON block of the following format. All parameters specified as required above must be filled out in this request.
+```json
+{
+    "LocationIds": [
+        "ClassA",
+        "ClassB",
+        "ClassV"
+    ],
+    "UserId": "janeDoe7"
+}
+```
+Once a request has been recieved it will give back __Status Code 201__, input the data in our database, and return a JSON block matching the data was entered in the sent body. Note that the previously mentioned parameter, "StudentIds" is not listed and that it will be set to null for a non-mentor.
+
+In order for the POST to sucessfully execute the following conditions must be met:
+- The user corresponding to UserId must be an existing user and not be a mentor
+- All LocationIds entered must correspond to exisitng locations already stored in the database
+ 
+### Associating a Mentor with Students
+
+You can create this relationship by sending a __POST__ request to the following address: __"<endpoint_url>/user-to-tracking-location"__. In the body of the request there should be a JSON block of the following format. All parameters specified as required above must be filled out in this request. Note that we only need to add students to a mentor's list of studentIds, there is no need to also attempt to create the reverse relationship (adding a mentor to a student's list of mentors.) 
+```json
+{
+    "StudentIds": [
+        "johnDoe12",
+        "otherStudent1",
+        "someoneElse45"
+    ],
+    "UserId": "janeDoe7"
+}
+```
+Once a request has been recieved it will give back __Status Code 201__, input the data in our database, and return a JSON block matching the data was entered in the sent body. Note that the previously mentioned parameter, "LocationIds" is not listed and that it will be set to null for a mentor.
+
+In order for the POST to sucessfully execute the following conditions must be met:
+- The user corresponding to UserId must be an existing user and be a mentor
+- All StudentIds entered must correspond to exisitng students users
+
+### Retrieving All Students associated with a Mentor
+
+All students assigned to a given mentor can be retrieved with a __GET__ request at the __"<endpoint_url>/users/mentors/{userId}/students"__ level. The response will contain a list of JSON objects, each representing the user information of students mentored. To clarify, {userId} should be replaced with the userId of the mentor user whose students we want to locate. For example, a GET request to "<endpoint_url>/users/students/janeDoe7/mentors" will retrieve all students associated with the mentor "janeDoe7".
+
+When students are succesfully retrieved the response will have a __Status Code 200__.
+If there does not exist a mentor user with {userId} the response will have a __Status Code 404__: Resource Not Found.
+
+### Retrieving All Mentors associated with a Student
+
+All mentors assigned to a given student can be retrieved with a __GET__ request at the __"<endpoint_url>/users/students/{userId}/mentors"__ level. The response will contain a list of JSON objects, each representing the user information of the mentors. To clarify, {userId} should be replaced with the userId of the student user whose mentors we want to locate. For example, a GET request to "<endpoint_url>/users/students/johnDoe12/mentors" will retrieve all mentors associated with the student "johnDoe12".
+
+When mentors are succesfully retrieved the response will have a __Status Code 200__.
+If there does not exist a student user with {userId} the response will have a __Status Code 404__: Resource Not Found.
+
+### Retrieving All Students associated with a Tracking Location
+
+All students associated with a given tracking location can be retrieved with a __GET__ request at the __"<endpoint_url>/users-to-tracking-location/{trackingLocationId}"__ level. The response will contain a list of JSON objects, each representing the user information of the students. To clarify, {trackingLocationId} should be replaced with the LocationId of the course whose students we want to locate. For example, a GET request to "<endpoint_url>/users-to-tracking-location/ClassA" will retrieve all students associated with "ClassA".
+
+When students are succesfully retrieved the response will have a __Status Code 200__.
+If there does not exist a course with {trackingLocationId} or there are no students associated with the course the response will have a __Status Code 404__: Resource Not Found.
+
+### Removing Relationships
+
+To delete a specific relationship, (either between mentors and students or betweeen students and tracking locations)  we make a __DELETE__ request at __"<endpoint_url>/user-to-tracking-location/users/{userId}"__ level. To clarify, {userId} should be replaced with the userId of the user whose associations we want to remove. For example, a DELETE request to "<endpoint_url>/user-to-tracking-location/users/johnDoe12" will remove the association of this student with tracking locations. __Note that this would not remove this student from being associated with various mentors.__ To remove all of a mentor's student associations we would have input the mentor]s userId instead.
+
+If the userId is not associated with any relationships the response will have a __Status Code 404__: Resource Not Found.
+
+When a relationship is sucessfully deleted the response will have a __Status Code 204__.
 
 [Back To Top](#excel-competencies-tracking)
 
