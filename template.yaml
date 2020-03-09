@@ -398,7 +398,7 @@ Resources:
   AddTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking_location_to_competencies/
+      CodeUri: functions/tracking-location-to-competencies/
       Handler: post.lambdaHandler
       Layers:
         - !Ref DataValidation
@@ -407,7 +407,7 @@ Resources:
         AddTrackingLocationToCompetencies:
           Type: Api
           Properties:
-            Path: /TrackingLocationToCompetencies
+            Path: /tracking-location-to-competencies
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -430,14 +430,14 @@ Resources:
   DeleteTrackingLocationToCompetenciesFunction: 
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking_location_to_competencies//{locationId}
+      CodeUri: functions/tracking-location-to-competencies//{locationId}
       Handler: delete.lambdaHandler
       Runtime: nodejs12.x
       Events:
         DeleteEvaluation:
           Type: Api
           Properties:
-            Path: /TrackingLocationToCompetencies/{locationId}
+            Path: /tracking-location-to-competencies/{locationId}
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -459,14 +459,14 @@ Resources:
   GetSpecificTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking_location_to_competencies/{locationId}
+      CodeUri: functions/tracking-location-to-competencies/{locationId}
       Handler: get.lambdaHandler
       Runtime: nodejs12.x
       Events:
         GetCompetencies:
           Type: Api
           Properties:
-            Path: /TrackingLocationToCompetencies/{locationId}
+            Path: /tracking-location-to-competencies/{locationId}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
