@@ -147,9 +147,38 @@ Note that the term “student’ above refers to a student in the Excel program;
 
 ### Adding a User
 
+You can add a user by sending a POST request to the following address: <endpoint_url>/users. In the body of the request there should be a JSON block of the following format. All parameters specified as required above must be filled out in this request.
+```json
+ {
+   "UserId": "janedoe",
+   "UserInfo": {
+   "name": "Jane Doe"
+   "email": "JaneDoe@gatech.edu"
+   },
+   "Role": "Student (current)",
+   "Cohort": "2",
+   "GTId": "999555444",
+}
+```
+Once a request has been recieved it will give back __Status Code 201__, input the data in our database, and return a JSON block matching the data was entered in the sent body. Such as the example below. 
+```json
+ {
+   "UserId": "janedoe",
+   "UserInfo": {
+   "name": "Jane Doe"
+   "email": "JaneDoe@gatech.edu"
+   },
+   "Role": "Student (current)",
+   "Cohort": "2",
+   "GTId": "999555444",
+}
+```
+
 ### Retrieving a User 	
 
-(given userId)
+To retrieve a specific user, we make a GET request at "<endpoint_url>/users/{userId}" level. To clarify, {userId} should be replaced with the userId of the user we want to remove. For example, a GET request to ""<endpoint_url>/users/2" will remove the user with the id "2" or return a Status Code 404: Resource Not Found error if there does not exist a user with the id "2".
+
+When a user is sucessfully retrieved the response will have a Status Code 200.
 
 ### Deleting a User 
 
