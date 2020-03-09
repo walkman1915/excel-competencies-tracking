@@ -154,8 +154,9 @@ Note that the term “student’ above refers to a student in the Excel program;
 
 ### Deleting a User 
 
-(given userId)
+To delete a specific user, we make a DELETE request at "<endpoint_url>/users/{userId}" level. To clarify, {userId} should be replaced with the userId of the user we want to remove. For example, a DELETE request to ""<endpoint_url>/users/2" will remove the user with the id "2" or return a Status Code 404: Resource Not Found error if there does not exist a user with the id "2".
 
+When a user is sucessfully deleted the response will have a Status Code 200.
 
 [Back To Top](#excel-competencies-tracking)
 
@@ -197,13 +198,13 @@ Once a request has been recieved it will give back __Status Code 201__, input th
 
 All competencies can be retrieved with a GET request at the "<endpoint_url>/competencies" level. The response will contain a list of JSON values representing each competency in the master competencyies table list.
 
-To retrieve a specific competency, we make a GET request at "<endpoint_url>/competencies/{competencyId}" level. To clarify, {competencyId} should be replaced with the competenctyId of the competency we want to retrieve. For example, a GET request to ""<endpoint_url>/competencies/2" will retrieve the competency with the id "2" or return a __Status Code 404__: Resource Not Found error if there does not exist a competency with the if "2".
+To retrieve a specific competency, we make a GET request at "<endpoint_url>/competencies/{competencyId}" level. To clarify, {competencyId} should be replaced with the competenctyId of the competency we want to retrieve. For example, a GET request to ""<endpoint_url>/competencies/2" will retrieve the competency with the id "2" or return a __Status Code 404__: Resource Not Found error if there does not exist a competency with the id "2".
 
-When competencies are succesfully retrieved the resonse will have a __Status Code 200__.
+When competencies are succesfully retrieved the response will have a __Status Code 200__.
 
 ### Removing Competencies
 
-To delete a specific competency, we make a DELETE request at "<endpoint_url>/competencies/{competencyId}" level. To clarify, {competencyId} should be replaced with the competenctyId of the competency we want to retrieve. For example, a DELETE request to ""<endpoint_url>/competencies/2" will remove the competency with the id "2" or return a __Status Code 404__: Resource Not Found error if there does not exist a competency with the if "2".
+To delete a specific competency, we make a DELETE request at "<endpoint_url>/competencies/{competencyId}" level. To clarify, {competencyId} should be replaced with the competenctyId of the competency we want to retrieve. For example, a DELETE request to ""<endpoint_url>/competencies/2" will remove the competency with the id "2" or return a __Status Code 404__: Resource Not Found error if there does not exist a competency with the id "2".
 
 When a competency is sucessfully deleted the response will have a __Status Code 204__.
 
@@ -229,6 +230,39 @@ If a competency is not found during a GET or DELETE request, the reponse will be
 [Back To Top](#excel-competencies-tracking)
 
 ## Tracking Locations 
+
+### Useful Parameters
+
+_The following data parameters describe the sort information contained in TrackingLocationToCompetency entry._
+
+- __LocationId__ : (String, Auto-generated) The unique Id of a given location (either a class name or a type of advising). This Id will not change even if a location's name changes. When a POST request is made, the database is scanned to see if an entry already exists with the same __LocationName__. If so, that specific __LocationId__ will be used. If not, a new and unique __LocationId__ is automatically generated.
+
+- __CompetencyIds__: (String, Required) A list of CompetencyIds that a given location is currently tracking. Note that the Ids of the Competencies are stored instead of the names (since the latter is more likely to change).
+
+- __LocationName__: (String, Required) Human readable name of the given location or the advising location name. The three valid types of advising are: {“Advising (academic)”, “Advising (social)”, “Advising (career)”}.
+
+### Adding a Tracking Location
+
+You can add a competency by sending a POST request to the following address: "<endpoint_url>/tracking-location-to-competencies". In the body of the request there should be a JSON block of the following format. All parameters specified as required above must be filled out in this request.
+```json
+ {  
+	  "CompetencyIds": ["001","002","003"],
+	  "LocationName" : "2",
+ }
+```
+Once a request has been recieved it will give back __Status Code 201__, input the data in our database, and return a JSON block matching the data was entered in the sent body. 
+
+### Removing a Tracking Location
+
+To delete a specific tracking location, we make a DELETE request at "<endpoint_url>/tracking-location-to-competencies/{locationId}" level. To clarify, {locationId} should be replaced with the locationId of the tracking location we want to remove. For example, a DELETE request to ""<endpoint_url>/tracking-location-to-competencies/2" will remove the tracking location with the id "2" or return a __Status Code 404__: Resource Not Found error if there does not exist a tracking location with the id "2".
+
+When a tracking location is sucessfully deleted the response will have a __Status Code 200__.
+
+### Retrieving a Tracking Location
+
+To retrieve a specific tracking location, we make a GET request at "<endpoint_url>/tracking-location-to-competencies/{locationId}" level. To clarify, {locationId} should be replaced with the locationId of the tracking location we want to retrieve. For example, a DELETE request to ""<endpoint_url>/tracking-location-to-competencies/2" will retrieve the tracking location with the id "2" or return a __Status Code 204__: that the action was successful but a tracking location with the id "2" does not exist in the database.
+
+When a tracking location is succesfully retrieved the response will have a __Status Code 200__.
 
 [Back To Top](#excel-competencies-tracking)
 
