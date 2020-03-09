@@ -152,9 +152,9 @@ You can add a user by sending a POST request to the following address: <endpoint
  {
    "UserId": "janedoe",
    "UserInfo": {
-   "name": "Jane Doe"
-   "email": "JaneDoe@gatech.edu"
-   },
+     "name": "Jane Doe",
+     "email": "JaneDoe@gatech.edu"
+    },
    "Role": "Student (current)",
    "Cohort": "2",
    "GTId": "999555444",
@@ -165,8 +165,8 @@ Once a request has been recieved it will give back __Status Code 201__, input th
  {
    "UserId": "janedoe",
    "UserInfo": {
-   "name": "Jane Doe"
-   "email": "JaneDoe@gatech.edu"
+     "name": "Jane Doe",
+     "email": "JaneDoe@gatech.edu"
    },
    "Role": "Student (current)",
    "Cohort": "2",
@@ -433,10 +433,10 @@ When Evaluation Scale Scores are succesfully retrieved the response will have a 
            /{timeStamp}
                GET    [Get all evaluations for a given specific user, specific competency, and specific time stamp]
                DELETE [Delete all evaluations for a given specific user, specific competency, and specific time stamp]
-/evaluation_scale
+/evaluationScale
     GET   [Get the evaluation scale]
     POST  [Add a new evaluation scale item]
-/tracking_locations_to_competencies
+/tracking-locations-to-competencies
     GET   [Get all tracking locations]
     POST  [Add a new tracking location]
     /{locationId}
