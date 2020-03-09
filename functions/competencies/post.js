@@ -1,13 +1,16 @@
 let response;
 
+const validate = require('/opt/validate');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const COMPETENCIES_DDB_TABLE_NAME= process.env.COMPETENCIES_DDB_TABLE_NAME; 
 
-/* Hardcoding valid inputs */
+/* CONSTANTS */
+const REQUIRED_ARGS = ["CompetencyId", "CompetencyTitle", "Domain", "Subcategory", "Importance", "Difficulty", "EvaluationFrequency"];
 const VALID_DOMAINS = ["TRANSPORTATION", "EMPLOYMENT_AND_CAREERS", "HEALTH_AND_WELLNESS", "FINANCIAL_LITERACY", "HOUSING", "SOCIAL_AND_LEADERSHIP", "TECHNOLOGY_AND_COMMUNICATION"];
 const VALID_DIFFICULTY = ["1", "2", "3", "4"];
 const VALID_FREQUENCIES = ["MONTHLY", "SEMESTERLY", "YEARLY"];
+
 
 /**
  *
@@ -25,124 +28,57 @@ exports.lambdaHandler = async (event, context) => {
     try {
         const requestBody = JSON.parse(event.body);
 
-		const competencyId = requestBody.CompetencyId;
-		if (!("CompetencyId" in requestBody) || competencyId == "") {
-			response = {
-				statusCode: 400,
-				body: "This request is missing a necessary parameter - CompetencyId.",
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-				},
-			}
-			return response;
-		} else if (!/^\d+$/.test(competencyId)) {
-			response = {
-				statusCode: 400,
-				body: "This request must contain a non-empty CompetencyId with only numeric characters. You entered : " + competencyId,
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-				},
-			}
-			return response;
+
+        // check that each required field is valid
+        for (i = 0; i < REQUIRED_ARGS.length; i++) {
+            ret = validate.validateField(requestBody, REQUIRED_ARGS[i]);
+            if (ret != null) {
+                return ret;
+            }
 		}
+		
+        // check if Role is one of the acceptable values
+        ret = validate.fieldIncludes(requestBody, "Domain", VALID_DOMAINS);
+        if (ret != null) {
+            return ret;
+		}
+		
+		ret = validate.fieldIncludes(requestBody, "Difficulty", VALID_DIFFICULTY);
+        if (ret != null) {
+            return ret;
+		}
+
+		ret = validate.fieldIncludes(requestBody, "EvaluationFrequency", VALID_FREQUENCIES);
+        if (ret != null) {
+            return ret;
+		}
+
+		const competencyId = requestBody.CompetencyId;
 		
         const competencyTitle = requestBody.CompetencyTitle;
-		if (!("CompetencyTitle" in requestBody) || competencyTitle == "") {
-			response = {
-				statusCode: 400,
-				body: "This request is missing the required parameter - CompetencyTitle.",
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-				},
-			}
-			return response;
-		}
 		
 		const domain = requestBody.Domain;
-		if (!("Domain" in requestBody) || domain == "") {
-			response = {
-				statusCode: 400,
-				body: "This request is missing the required parameter - Domain.",
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-				},
-			}
-			return response;
-		} else if (!VALID_DOMAINS.includes(domain)) {
-			response = {
-				statusCode: 400,
-				body: "This request must contain a pre-defined domain. You entered : " + domain + "; but the only valid options are " + VALID_DOMAINS.toString(),
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-				},
-			}
-			return response;
-		}
 
 		const subcategory = requestBody.Subcategory;
-		if (!("Subcategory" in requestBody) || subcategory == "") {
-			response = {
-				statusCode: 400,
-				body: "This request is missing the required parameter - Subcategory.",
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-				},
-			}
-			return response;
-		}
+
+		const importance = requestBody.Importance;
 
 		const difficulty = requestBody.Difficulty;
-		if (!("Difficulty" in requestBody) || difficulty == "") {
-			response = {
-				statusCode: 400,
-				body: "This request is missing the required parameter - Difficulty.",
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-				},
-			}
-			return response;
-		} else if (!VALID_DIFFICULTY.includes(difficulty)) {
-			response = {
-				statusCode: 400,
-				body: "This request must contain a pre-defined domain. You entered : " + difficulty + "; but the only valid options are " + VALID_DIFFICULTY.toString(),
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-				},
-			}
-			return response;
-		}
-
 
 		const evaluationFrequency = requestBody.EvaluationFrequency;
-		if (!("EvaluationFrequency" in requestBody) || evaluationFrequency == "") {
-			response = {
-				statusCode: 400,
-				body: "This request is missing the required parameter - EvaluationFrequency.",
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-				},
-			}
-			return response;
-		} else if (!VALID_FREQUENCIES.includes(evaluationFrequency)) {
-			response = {
-				statusCode: 400,
-				body: "This request must contain a pre-defined domain. You entered : " + evaluationFrequency + "; but the only valid options are " + VALID_FREQUENCIES.toString(),
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-				},
-			}
-			return response;
-		}
 
-        // Since unique evaluation is future work it's optional
-        const uniqueEvaluationScale = ("UniqueEvaluationScale" in requestBody && requestBody.UniqueEvaluationScale != "")  ? requestBody.UniqueEvaluationScale : null;
-        
+        //const uniqueEvaluationScale = ("UniqueEvaluationScale" in requestBody && requestBody.UniqueEvaluationScale != "")  ? requestBody.UniqueEvaluationScale : null;
+		
+		// Since unique evaluation is future work it's optional
+		const uniqueEvaluationScale = validate.optionalField(requestBody, "UniqueEvaluationScale");
+
         // Construct the competency object to store in the database
         const competency = {
             CompetencyId : competencyId,
 			CompetencyTitle : competencyTitle,
             Domain : domain,
-            Subcategory: subcategory,
+			Subcategory: subcategory,
+			Importance: importance,
             Difficulty: difficulty,
             EvaluationFrequency: evaluationFrequency,
 			UniqueEvaluationScale : uniqueEvaluationScale
