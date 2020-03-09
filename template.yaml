@@ -786,7 +786,7 @@ Resources:
       ProvisionedThroughput: 
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
-      TableName: "CompetenciesMaster"
+      #TableName: "CompetenciesMaster"
   EvaluationsDDBTable: # Holds all individual evaluations
     Type: AWS::DynamoDB::Table
     Properties: 
@@ -814,7 +814,7 @@ Resources:
       ProvisionedThroughput: 
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
-      TableName: "Evaluations"
+      #TableName: "Evaluations"
   UsersDDBTable: # Stores info for all possible users of this application (students, faculty/staff, etc.)
     Type: AWS::DynamoDB::Table
     Properties: 
@@ -827,7 +827,7 @@ Resources:
       ProvisionedThroughput: 
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
-      TableName: "Users"
+      #TableName: "Users"
   TrackingLocationToCompetenciesDDBTable: # Maps the tracking location (a class or type of advising) to all competencies evaluated in that class/advising type
     Type: AWS::DynamoDB::Table
     Properties: 
@@ -840,7 +840,7 @@ Resources:
       ProvisionedThroughput: 
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
-      TableName: "TrackingLocationToCompetencies"
+      #TableName: "TrackingLocationToCompetencies"
   UsersToTrackingLocationDDBTable: # Maps a given user to all the tracking locations they are currently a part of (essentially a student's schedule)
     Type: AWS::DynamoDB::Table
     Properties: 
@@ -853,7 +853,7 @@ Resources:
       ProvisionedThroughput: 
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
-      TableName: "UsersToTrackingLocation"
+      #TableName: "UsersToTrackingLocation"
   EvaluationScaleDDBTable: # Contains the textual description of what each evaluation score represents
     Type: AWS::DynamoDB::Table
     Properties: 
@@ -866,7 +866,7 @@ Resources:
       ProvisionedThroughput: 
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
-      TableName: "EvaluationScale"
+      #TableName: "EvaluationScale"
 
 
 Outputs: # These outputs are just for our benefit if we want quick access to the ARNs or HTTP address.
