@@ -367,21 +367,26 @@ A more detailed textual description of what a performance for a given evaluation
 
 ### Adding an Evaluation Scale Score
 
-You can add an evaluation scale score by sending a POST request to the following address: <TBD>. In the body of the request there should be a JSON block of the following format. All parameters specified as required above must be filled out in this request.
+You can add an evaluation scale score by sending a POST request to the following address: <endpoint_url>/evaluationScale. In the body of the request there should be a JSON block of the following format. All parameters specified as required above must be filled out in this request.
 ```json
 {
   "EvaluationScore": "4",
-	 "Title": "TEST",
-	 "Frequency": "TEST",
-	 "Support": "TEST",
-	 "Explanation": "TEST"
+	 "Title": "Does it well / Has Mastered",
+	 "Frequency": "Almost all of the time",
+	 "Support": "No support or prompt needed",
+	 "Explanation": "Student consistently performs this skill independently and in proper settings. They understand this concept without further assistance or explanation required. Student is aware of the importance of this competency."
 }
 ```
 Once a request has been recieved it will give back __Status Code 200__, input the data in our database, and return a JSON block matching the data was entered in the sent body.
 
 
 ### Retrieving all Evaluation Scale Scores
-In order to retrieve all of the Evaluation Scale Scores, simply send the GET request to the following address: <TBD>. This will return a JSON block containing all of the scores that are currently in the system.
+In order to retrieve all of the Evaluation Scale Scores, simply send the GET request to the following address: <endpoint_url>/evaluationScale. This will return a JSON block containing all of the scores that are currently in the system.
+
+
+When Evaluation Scale Scores are succesfully retrieved the response will have a __Status Code 200__.
+
+
 # API Tree
 ```
 /competencies
