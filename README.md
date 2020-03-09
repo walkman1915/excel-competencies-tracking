@@ -113,16 +113,15 @@ In addition to receiving a Status Code 400 response, the reponse's body would co
 
 To retrieve all evaluations in the table, send a GET request to the following address: <endpoint_url>/evaluations.
 
-To retrieve all of the evaluations for a specific user, send a GET request to the following address: <endpoint_url>/evaluations/{userId} , where {userId} is the UserId of the student you are scanning the table for. For example . . . (example here)
+To retrieve all of the evaluations for a specific user, send a GET request to the following address: <endpoint_url>/evaluations/{userId} , where {userId} is the UserId of the user you are scanning the table for. For example, if the userId in question is 2, then the url looks like this: <endpoint_url>/evaluations/2.
 
-To retrieve all of the evaluations for a specific user in a specific competency, send a GET request to the following address: <endpoint_url>/evaluations/{userId} /{compId} , where {userId} is the UserId of the student you are scanning the table for and {compId} is the CompetencyId of the competency you are scanning the table for. For example . . . (example here)
+To retrieve all of the evaluations for a specific user in a specific competency, send a GET request to the following address: <endpoint_url>/evaluations/{userId} /{compId} , where {userId} is the UserId of the user you are scanning the table for and {compId} is the CompetencyId of the competency you are scanning the table for. For example, if the userId in question is 2 and the compId in question is 4, then the url looks like this: <endpoint_url>/evaluations/2/4.
 
-
-To retrieve the evaluation for a specific user in a specific competency with a specific timestamp, send a GET request to the following address: <endpoint_url>/evaluations/{userId}/{compId}/{timeStamp} , where {userId} is the UserId of the student you are scanning the table for, {compId} is the CompetencyId of the competency you are scanning the table for, and {timeStamp} is the specific timestamp of the evaluation you are looking for. For example . . . (example here)
+To retrieve the evaluation for a specific user in a specific competency with a specific timestamp, send a GET request to the following address: <endpoint_url>/evaluations/{userId}/{compId}/{timeStamp} , where {userId} is the UserId of the user you are scanning the table for, {compId} is the CompetencyId of the competency you are scanning the table for, and {timeStamp} is the specific timestamp of the evaluation you are looking for. For example, if the userId in question is 2, the compId in question is 4, and the timestamp is 2019-11-17T21:54:50.635Z, then the url looks like this: <endpoint_url>/evaluations/2/4/2019-11-17T21:54:50.635Z.
 
 ### Deleting Evaluations 
 
-To delete the evaluation for a specific user in a specific competency with a specific timestamp, send a DELETE request to the following address: <endpoint_url>/evaluations/{userId}/{compId}/{timeStamp} , where {userId} is the UserId of the student you are scanning the table for, {compId} is the CompetencyId of the competency you are scanning the table for, and {timeStamp} is the specific timestamp of the evaluation you are looking for in order to delete. For example . . . (example here)
+To delete the evaluation for a specific user in a specific competency with a specific timestamp, send a DELETE request to the following address: <endpoint_url>/evaluations/{userId}/{compId}/{timeStamp} , where {userId} is the UserId of the student you are scanning the table for, {compId} is the CompetencyId of the competency you are scanning the table for, and {timeStamp} is the specific timestamp of the evaluation you are looking for in order to delete. For example, if the userId in question is 2, the compId in question is 4, and the timestamp is 2019-11-17T21:54:50.635Z, then the url looks like this: <endpoint_url>/evaluations/2/4/2019-11-17T21:54:50.635Z.
 
 [Back To Top](#excel-competencies-tracking)
 
