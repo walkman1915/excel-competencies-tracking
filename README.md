@@ -61,7 +61,7 @@ _The following data parameters describe the sort information contained in an Eva
 
 ### Adding an Evaluation
 
-You can add an evaluation by sending a POST request to the following address: <TBD>. In the body of the request there should be a JSON block of the following format. All parameters specified as required above must be filled out in this request.
+You can add an evaluation by sending a POST request to the following address: <endpoint_url>/evaluations. In the body of the request there should be a JSON block of the following format. All parameters specified as required above must be filled out in this request.
 ```json
  {
    "UserId": "jdoe",
@@ -109,15 +109,19 @@ In addition to receiving a Status Code 400 response, the reponse's body would co
 ```
   "Required body argument 'CompetencyId' was not specified"
 ```
-### Getting All Evaluations
+### Retrieving All Evaluations
 
-### Getting Evaluations (given UserId)
+Retrieving all Evaluations
 
-### Getting Evaluations (given UserId and competencyId)
+Retrieving Evaluations (given UserId)
 
-### Getting Evaluations (given UserId, competencyId, and timestamp)
+Retrieving Evaluations (given UserId and competencyId)
 
-### Deleting Evaluations (given UserId, competencyId, and timestamp)
+Retrieving Evaluations (given UserId, competencyId, and timestamp)
+
+### Deleting Evaluations 
+
+(given UserId, competencyId, and timestamp)
 
 [Back To Top](#excel-competencies-tracking)
 
@@ -143,13 +147,17 @@ Note that the term “student’ above refers to a student in the Excel program;
 
 ### Adding a User
 
-### Getting a User (given userId)
+### Retrieving a User 	
 
-### Deleting a User (given userId)[Back To Top](#excel-competencies-tracking)
+(given userId)
 
+### Deleting a User 
+
+(given userId)
 
 
 [Back To Top](#excel-competencies-tracking)
+
 
 ## Competencies
 
@@ -337,7 +345,7 @@ You can add an evaluation scale score by sending a POST request to the following
 Once a request has been recieved it will give back __Status Code 200__, input the data in our database, and return a JSON block matching the data was entered in the sent body.
 
 
-### Getting all Evaluation Scale Scores
+### Retrieving all Evaluation Scale Scores
 In order to retrieve all of the Evaluation Scale Scores, simply send the GET request to the following address: <TBD>. This will return a JSON block containing all of the scores that are currently in the system.
 # API Tree
 ```
