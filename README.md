@@ -9,7 +9,8 @@ For quick access to the following sections, select the hyperlinks below.
 4. [API Calls For Competencies](#competencies)
 5. [API Calls For TrackingLocations](#tracking-locations)
 6. [API Calls For User Association with Tracking Locations and Other Users](#user-association-with-tracking-locations-and-other-users)
-7. [Full API Tree](#api-tree)
+7. [API Calls For EvaluationScales](#evaluation-scale)
+8. [Full API Tree](#api-tree)
 
 ## Relevant Terms
 
@@ -108,9 +109,45 @@ In addition to receiving a Status Code 400 response, the reponse's body would co
 ```
   "Required body argument 'CompetencyId' was not specified"
 ```
+### Getting All Evaluations
+
+### Getting Evaluations (given UserId)
+
+### Getting Evaluations (given UserId and competencyId)
+
+### Getting Evaluations (given UserId, competencyId, and timestamp)
+
+### Deleting Evaluations (given UserId, competencyId, and timestamp)
+
 [Back To Top](#excel-competencies-tracking)
 
+
 ## Users and User Relationships
+
+### Useful Parameters
+
+_The following data parameters describe the sort information contained in an Evaluation Scale entry._
+
+- __UserId__: (String, Required)  Unique ID of the user; also used for log-in -- this is their username that they use for login
+
+- __UserInfo__: (Map, Required)  Name, email, and any other info stored about each user
+
+
+- __Role__: (String, Required)  Tells what this user’s role is in the system. Permissible values: “Faculty/Staff”, “Admin”, “Student (current)”, “Student (graduate)”, “Student (other)”, “Coach”, “Mentor”
+Note that the term “student’ above refers to a student in the Excel program; coaches and mentors are technically GT students, but are not considered students in this system
+
+
+- __Cohort__: (String, Optional)  Only applicable for Excel students -- other roles will not have a value for this. Represents which cohort the student is a part of. The first entering class of the Excel Program is Cohort 1. The next year’s entering class is Cohort 2, etc. The client wants to be able to pull all reports for a given cohort to see the progression from semester to semester as an entire group
+
+- __GTId__: (String, Optional) The GT ID of this user
+
+### Adding a User
+
+### Getting a User (given userId)
+
+### Deleting a User (given userId)[Back To Top](#excel-competencies-tracking)
+
+
 
 [Back To Top](#excel-competencies-tracking)
 
@@ -267,6 +304,41 @@ When a relationship is sucessfully deleted the response will have a __Status Cod
 
 [Back To Top](#excel-competencies-tracking)
 
+## Evaluation Scale 
+
+### Useful Parameters
+
+_The following data parameters describe the sort information contained in an Evaluation Scale entry._
+
+- __EvaluationScore__ : (String, Required) A number on the evaluation scale (0-4) representing how the student performed. Permissible values are:
+“4”,“3”,“2”,“1”,“0”
+
+- __Title__: (String, Required)  A short textual description of what a performance for a given evaluation score entails. This is column B (“Performance/Completion of Competency”) in the “Evaluation Scale” tab of the Google Doc.
+
+- __Frequency__: (String, Required)  A textual description of how frequently this skill was demonstrated. This is column C (“Frequency”) in the “Evaluation Scale” tab of the Google Doc.
+
+- __Support__: (String, Required)  A textual description of what support was needed when this skill was demonstrated. This is column D (“Support or prompt needed”) in the “Evaluation Scale” tab of the Google Doc.
+
+- __Explanation__: (String, Required)  
+A more detailed textual description of what a performance for a given evaluation score entails. This is column E (“Explanation”) in the “Evaluation Scale” tab of the Google Doc.
+
+### Adding an Evaluation Scale Score
+
+You can add an evaluation scale score by sending a POST request to the following address: <TBD>. In the body of the request there should be a JSON block of the following format. All parameters specified as required above must be filled out in this request.
+```json
+{
+  "EvaluationScore": "4",
+	 "Title": "TEST",
+	 "Frequency": "TEST",
+	 "Support": "TEST",
+	 "Explanation": "TEST"
+}
+```
+Once a request has been recieved it will give back __Status Code 200__, input the data in our database, and return a JSON block matching the data was entered in the sent body.
+
+
+### Getting all Evaluation Scale Scores
+In order to retrieve all of the Evaluation Scale Scores, simply send the GET request to the following address: <TBD>. This will return a JSON block containing all of the scores that are currently in the system.
 # API Tree
 ```
 /competencies
