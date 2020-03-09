@@ -111,17 +111,18 @@ In addition to receiving a Status Code 400 response, the reponse's body would co
 ```
 ### Retrieving All Evaluations
 
-Retrieving all Evaluations
+To retrieve all evaluations in the table, send a GET request to the following address: <endpoint_url>/evaluations.
 
-Retrieving Evaluations (given UserId)
+To retrieve all of the evaluations for a specific user, send a GET request to the following address: <endpoint_url>/evaluations/{userId} , where {userId} is the UserId of the student you are scanning the table for. For example . . . (example here)
 
-Retrieving Evaluations (given UserId and competencyId)
+To retrieve all of the evaluations for a specific user in a specific competency, send a GET request to the following address: <endpoint_url>/evaluations/{userId} /{compId} , where {userId} is the UserId of the student you are scanning the table for and {compId} is the CompetencyId of the competency you are scanning the table for. For example . . . (example here)
 
-Retrieving Evaluations (given UserId, competencyId, and timestamp)
+
+To retrieve the evaluation for a specific user in a specific competency with a specific timestamp, send a GET request to the following address: <endpoint_url>/evaluations/{userId}/{compId}/{timeStamp} , where {userId} is the UserId of the student you are scanning the table for, {compId} is the CompetencyId of the competency you are scanning the table for, and {timeStamp} is the specific timestamp of the evaluation you are looking for. For example . . . (example here)
 
 ### Deleting Evaluations 
 
-(given UserId, competencyId, and timestamp)
+To delete the evaluation for a specific user in a specific competency with a specific timestamp, send a DELETE request to the following address: <endpoint_url>/evaluations/{userId}/{compId}/{timeStamp} , where {userId} is the UserId of the student you are scanning the table for, {compId} is the CompetencyId of the competency you are scanning the table for, and {timeStamp} is the specific timestamp of the evaluation you are looking for in order to delete. For example . . . (example here)
 
 [Back To Top](#excel-competencies-tracking)
 
