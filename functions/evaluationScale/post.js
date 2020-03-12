@@ -1,9 +1,12 @@
 let response;
 
+const validate = require('/opt/validate');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const EVALUATION_SCALE_DDB_TABLE_NAME = process.env.EVALUATION_SCALE_DDB_TABLE_NAME; // Allows us to access the environment variables defined in the Cloudformation template
-const validEvaluationScores = ["0", "1", "2", "3", "4"];
+
+const REQUIRED_ARGS = ["EvaluationScore", "Title", "Frequency", "Support", "Explanation"];
+const VALID_EVIDENCE = ["0", "1", "2", "3", "4"];
 /**
  *
  * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
@@ -21,82 +24,29 @@ exports.lambdaHandler = async (event, context) => {
         const requestBody = JSON.parse(event.body);
 
         //Data validation
-   
-        //EvaluationScore doesn't exist
-        if (!("EvaluationScore" in requestBody) || requestBody.EvaluationScore == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'EvaluationScore' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
+
+        console.log("attempting validation");
+
+        for (i = 0; i < REQUIRED_ARGS.length; i++) {
+            ret = validate.validateField(requestBody, REQUIRED_ARGS[i]);
+            if (ret != null) {
+                return ret;
             }
-            return response;
         }
 
         const evaluationScore = requestBody.EvaluationScore;
-        //evaluationScore isn't in the range of 0 to 4
-        if (!(validEvaluationScores.includes(evaluationScore))) {
-            response = {
-                statusCode: 400, //bad request error code
-                body: "EvaluationScore was not valid, given value: '" + evaluationScore + "'. Expected values: " + validEvaluationScores.toString(),
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
+
+        ret = validate.fieldIncludes(requestBody, "EvaluationScore", VALID_EVIDENCE);
+        if (ret != null) {
+            return ret;
         }
 
-        //Title doesn't exist
-        if (!("Title" in requestBody) || requestBody.Title == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'Title' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
         const title = requestBody.Title;
 
-        //Frequency doesn't exist
-        if (!("Frequency" in requestBody) || requestBody.Frequency == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'Frequency' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
         const frequency = requestBody.Frequency;
 
-        //Support doesn't exist
-        if (!("Support" in requestBody) || requestBody.Support == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'Support' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
         const support = requestBody.Support;
 
-        //Explanation doesn't exist
-        if (!("Explanation" in requestBody) || requestBody.Explanation == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'Explanation' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
         const explanation = requestBody.Explanation;
 
         
