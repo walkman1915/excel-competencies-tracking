@@ -503,7 +503,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ExcelApi
-            Path: /TrackingLocationToCompetencies
+            Path: /trackings-location-to-competencies
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -536,7 +536,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ExcelApi
-            Path: /TrackingLocationToCompetencies/{locationId}
+            Path: /trackings-location-to-competencies/{locationId}
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -564,11 +564,11 @@ Resources:
         - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
-        GetCompetencies:
+        GetSpecificLocation:
           Type: Api
           Properties:
             RestApiId: !Ref ExcelApi
-            Path: /TrackingLocationToCompetencies/{locationId}
+            Path: /trackings-location-to-competencies/{locationId}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -576,6 +576,38 @@ Resources:
             Effect: Allow
             Action:
               - dynamodb:GetItem
+            Resource: # this should stay as well!
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
+      Environment:
+        Variables:
+          TRACKING_LOCATIONS_TO_COMPETENCIES_DDB: !Ref TrackingLocationToCompetenciesDDBTable 
+  GetAllTrackingLocationToCompetenciesFunction:
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/tracking_location_to_competencies/
+      Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
+      Runtime: nodejs12.x
+      Events:
+        GetAllLocations:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ExcelApi
+            Path: /trackings-location-to-competencies/
+            Method: get
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBGetPolicy
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Scan
             Resource: # this should stay as well!
               - !Sub
                 - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
