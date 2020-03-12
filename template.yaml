@@ -503,7 +503,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ExcelApi
-            Path: /trackings-location-to-competencies
+            Path: /tracking-locations-to-competencies
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -536,7 +536,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ExcelApi
-            Path: /trackings-location-to-competencies/{locationId}
+            Path: /tracking-locations-to-competencies/{locationId}
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -568,7 +568,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ExcelApi
-            Path: /trackings-location-to-competencies/{locationId}
+            Path: /tracking-locations-to-competencies/{locationId}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -599,7 +599,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ExcelApi
-            Path: /trackings-location-to-competencies/
+            Path: /tracking-locations-to-competencies/
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
