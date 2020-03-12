@@ -11,6 +11,13 @@ Description: >
 Globals:
   Function:
     Timeout: 3
+Parameters:
+  CognitoUserPoolName:
+    Type: String
+    Default: excel-tracking-user-pool
+  CognitoUserPoolClientName:
+    Type: String
+    Default: excel-tracking-user-pool-client
 Resources:
   ############ Lambda Functions ############
   PostAuthenticationFunction:
@@ -24,7 +31,7 @@ Resources:
           Type: Cognito
           Properties:
             UserPool: 
-              Ref: UserPool   
+              Ref: CognitoUserPool   
             Trigger: PostAuthentication
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -52,8 +59,7 @@ Resources:
         PreSignUp:
           Type: Cognito
           Properties:
-            UserPool: 
-              Ref: UserPool #Hardcoded right now for testing
+            UserPool: !Ref CognitoUserPool
             Trigger: PreSignUp
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -81,6 +87,7 @@ Resources:
         GetCompetencies:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /users
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -109,6 +116,7 @@ Resources:
         AddEvaluation:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluations
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -137,6 +145,7 @@ Resources:
         DeleteEvaluation:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluations/{userId}/{compId}/{timeStamp}
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -166,6 +175,7 @@ Resources:
         GetEvaluations:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluations
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -195,6 +205,7 @@ Resources:
         GetEvaluationsForUser:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluations/{userId}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -224,6 +235,7 @@ Resources:
         GetEvaluationsForUserAndComp:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluations/{userId}/{compId}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -253,6 +265,7 @@ Resources:
         GetSpecificEvaluation:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluations/{userId}/{compId}/{timeStamp}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -282,6 +295,7 @@ Resources:
         GetEvaluationScale:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluationScale
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -311,6 +325,7 @@ Resources:
         AddEvaluationScale:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluationScale
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -339,6 +354,7 @@ Resources:
         GetCompetencies:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /competencies # What should the official API url be? It will be whatever you type here
             Method: get # Which HTTP method (get, post, delete, etc.) should will invoke this lambda when an API call is made at this path?
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -369,6 +385,7 @@ Resources:
         DeleteCompetencies:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /competencies/{competencyId}
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -399,6 +416,7 @@ Resources:
         GetSpecificCompetency:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /competencies/{competencyId}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -427,6 +445,7 @@ Resources:
         AddCompetencies:
           Type: Api
           Properties:
+              RestApiId: !Ref ExcelApi
               Path: /competencies
               Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -455,6 +474,7 @@ Resources:
         AddTrackingLocationToCompetencies:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /TrackingLocationToCompetencies
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -485,6 +505,7 @@ Resources:
         DeleteEvaluation:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /TrackingLocationToCompetencies/{locationId}
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -514,6 +535,7 @@ Resources:
         GetCompetencies:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /TrackingLocationToCompetencies/{locationId}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -542,6 +564,7 @@ Resources:
         GetCompetencies:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /users/{userId}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -656,12 +679,37 @@ Resources:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
       TableName: "EvaluationScale"
-  UserPool:
+
+  ############ Authentication / API Gateway ############
+  ExcelApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors: "'*'"
+      Auth:
+        DefaultAuthorizer: MyCognitoAuthorizer
+        Authorizers:
+          MyCognitoAuthorizer:
+            UserPoolArn: !GetAtt CognitoUserPool.Arn
+  CognitoUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: excel-tracking-user-pool
+      UserPoolName: !Ref CognitoUserPoolName
+      # Policies: # Use this if you want to enforce various password settings
+      #   PasswordPolicy:
+      #     MinimumLength: 11
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: True
+      AutoVerifiedAttributes:
+        - email
+      # UsernameAttributes: # Use this if you want to mandate that their username is their email
+      #   - email
       Schema:
         - Name: name
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: email
           AttributeDataType: String
           Mutable: true
           Required: true
@@ -669,36 +717,44 @@ Resources:
           AttributeDataType: String
           Mutable: true
           Required: false
-  CognitoAuthorizer:
-    Type: AWS::ApiGateway::Authorizer
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
     Properties:
-      Type: COGNITO_USER_POOLS
-      Name: excel-tracking-authorizer
-      IdentitySource: method.request.header.Authorization
-      RestApiId: n74ypch107
-      ProviderARNs: 
-        - !GetAtt UserPool.Arn
-    
+      UserPoolId: !Ref CognitoUserPool
+      ClientName: !Ref CognitoUserPoolClientName
+      GenerateSecret: false
+      SupportedIdentityProviders:
+        - COGNITO
+      CallbackURLs:
+        - https://www.google.com
+      AllowedOAuthFlows: # TODO: can we scope this back?
+        - code
+        - implicit
+      AllowedOAuthScopes: # TODO: can we scope this back?
+        - phone
+        - email
+        - openid
+        - profile
+        - aws.cognito.signin.user.admin
+      ExplicitAuthFlows: # TODO: can we scope this back?
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        - ALLOW_CUSTOM_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+  CognitoUserPoolDomain: 
+    Type: AWS::Cognito::UserPoolDomain 
+    Properties:
+      UserPoolId: !Ref CognitoUserPool 
+      Domain: "excel-tracking"
 
 
 Outputs: # These outputs are just for our benefit if we want quick access to the ARNs or HTTP address.
          # They're shown in the console after a successful 'sam deploy'
-  ExcelCompetenciesTrackingApi:
-    Description: API Gateway endpoint URL for Prod stage for Excel Competencies Tracking project
-    Value:
-      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
-  GetCompetenciesFunction: # For consistency's sake, keep this name the same as the function's resource name above
-    Description: Get Competencies Lambda Function ARN
-    Value:
-      Fn::GetAtt:
-      - GetCompetenciesFunction
-      - Arn
-  GetCompetenciesFunctionIamRole: # This must literally be {function's resource name} + "IamRole"
-    Description: Implicit IAM Role created for Get Competencies function
-    Value:
-      Fn::GetAtt:
-      - GetCompetenciesFunctionRole
-      - Arn
-  CompetenciesMasterDDBTable:
-    Description: Competencies Master Dynamo DB Table ARN
-    Value: !GetAtt CompetenciesMasterDDBTable.Arn
+  CognitoUserPoolId:
+    Description: "Cognito User Pool Id"
+    Value: !Ref CognitoUserPool
+
+  CognitoUserPoolClientId:
+    Description: "Cognito User Pool Client Id"
+    Value: !Ref CognitoUserPoolClient
