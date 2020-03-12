@@ -111,6 +111,8 @@ Resources:
     Properties:
       CodeUri: functions/evaluations/
       Handler: post.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         AddEvaluation:
@@ -583,7 +585,14 @@ Resources:
       Environment:
         Variables:
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
-          
+  AuthenticationLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: excel-tracking-authentication-layer
+      Description: Token authentication for other requests
+      ContentUri: auth/layer/
+      CompatibleRuntimes:
+        - nodejs12.x        
 
   ############ DynamoDB Databases ############
   CompetenciesMasterDDBTable: # Master table to store info about each competency
