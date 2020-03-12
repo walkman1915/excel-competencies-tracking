@@ -1,9 +1,10 @@
 let response;
 
+const auth = require('/opt/auth');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const USERS_DDB_TABLE_NAME = process.env.USERS_DDB_TABLE_NAME; // Allows us to access the environment variables defined in the Cloudformation template
-
+const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
 /**
  *
  * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
@@ -18,6 +19,14 @@ const USERS_DDB_TABLE_NAME = process.env.USERS_DDB_TABLE_NAME; // Allows us to a
  */
 exports.lambdaHandler = async (event, context) => {
     try {
+        let indicator = auth.verifyAuthorizerExistence(event);
+        if (indicator != null) {
+            return indicator;
+        }
+        indicator = auth.verifyValidRole(event, validRoles);
+        if (indicator != null) {
+            return indicator;
+        }
         const requestBody = JSON.parse(event.body);
 
         // Information from the POST request needed to add a new user

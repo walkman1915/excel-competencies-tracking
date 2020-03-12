@@ -1,8 +1,10 @@
 let response;
 
+const auth = require('/opt/auth');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB = process.env.TRACKING_LOCATIONS_TO_COMPETENCIES_DDB; // Allows us to access the environment variables defined in the Cloudformation template
+const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
 
 /**
  *
@@ -20,6 +22,14 @@ exports.lambdaHandler = async (event, context) => {
     try {
 
         console.log("Request received!");
+        let indicator = auth.verifyAuthorizerExistence(event);
+        if (indicator != null) {
+            return indicator;
+        }
+        indicator = auth.verifyValidRole(event, validRoles);
+        if (indicator != null) {
+            return indicator;
+        }
         const requestBody = JSON.parse(event.body);
 
         // console.log(requestBody);

@@ -1,9 +1,11 @@
 let response;
 
+const auth = require('/opt/auth');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const EVALUATION_SCALE_DDB_TABLE_NAME = process.env.EVALUATION_SCALE_DDB_TABLE_NAME; // Allows us to access the environment variables defined in the Cloudformation template
 const validEvaluationScores = ["0", "1", "2", "3", "4"];
+const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
 /**
  *
  * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
@@ -18,6 +20,14 @@ const validEvaluationScores = ["0", "1", "2", "3", "4"];
  */
 exports.lambdaHandler = async (event, context) => {
     try {
+        let indicator = auth.verifyAuthorizerExistence(event);
+        if (indicator != null) {
+            return indicator;
+        }
+        indicator = auth.verifyValidRole(event, validRoles);
+        if (indicator != null) {
+            return indicator;
+        }
         const requestBody = JSON.parse(event.body);
 
         //Data validation

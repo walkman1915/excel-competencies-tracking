@@ -82,6 +82,8 @@ Resources:
     Properties:
       CodeUri: functions/users/
       Handler: post.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetCompetencies:
@@ -142,6 +144,8 @@ Resources:
     Properties:
       CodeUri: functions/evaluations/{userId}/{compId}/{timeStamp}  
       Handler: delete.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         DeleteEvaluation:
@@ -172,6 +176,8 @@ Resources:
     Properties:
       CodeUri: functions/evaluations/
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetEvaluations:
@@ -202,6 +208,8 @@ Resources:
     Properties:
       CodeUri: functions/evaluations/{userId}
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetEvaluationsForUser:
@@ -232,6 +240,8 @@ Resources:
     Properties:
       CodeUri: functions/evaluations/{userId}/{compId}
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetEvaluationsForUserAndComp:
@@ -262,6 +272,8 @@ Resources:
     Properties:
       CodeUri: functions/evaluations/{userId}/{compId}/{timeStamp}
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetSpecificEvaluation:
@@ -292,6 +304,8 @@ Resources:
     Properties:
       CodeUri: functions/evaluationScale/
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetEvaluationScale:
@@ -322,6 +336,8 @@ Resources:
     Properties:
       CodeUri: functions/evaluationScale/
       Handler: post.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         AddEvaluationScale:
@@ -351,6 +367,8 @@ Resources:
     Properties:
       CodeUri: functions/competencies/ # Where does the Lambda's JavaScript file live in the folder directory? Aka the path from this file to the JS file you want
       Handler: get.lambdaHandler # {JS file name - .js} + . + {method name in that JS file}
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events: # Answers "What events can trigger this Lambda?". In this case, it's an API call with a GET method to /competencies
         GetCompetencies:
@@ -382,6 +400,8 @@ Resources:
     Properties:
       CodeUri: functions/competencies/{competencyId}
       Handler: delete.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         DeleteCompetencies:
@@ -413,6 +433,8 @@ Resources:
     Properties:
       CodeUri: functions/competencies/{competencyId}
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetSpecificCompetency:
@@ -442,6 +464,8 @@ Resources:
     Properties:
       CodeUri: functions/competencies/
       Handler: post.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         AddCompetencies:
@@ -471,6 +495,8 @@ Resources:
     Properties:
       CodeUri: functions/tracking_location_to_competencies/
       Handler: post.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         AddTrackingLocationToCompetencies:
@@ -502,6 +528,8 @@ Resources:
     Properties:
       CodeUri: functions/tracking_location_to_competencies//{locationId}
       Handler: delete.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         DeleteEvaluation:
@@ -532,6 +560,8 @@ Resources:
     Properties:
       CodeUri: functions/tracking_location_to_competencies/{locationId}
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetCompetencies:
@@ -561,6 +591,8 @@ Resources:
     Properties:
       CodeUri: functions/users/{userId}
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetCompetencies:

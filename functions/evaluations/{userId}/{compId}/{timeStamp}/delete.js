@@ -1,9 +1,11 @@
 let response;
 
+const auth = require('/opt/auth');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const EVALUATIONS_DDB_TABLE_NAME = process.env.EVALUATIONS_DDB_TABLE_NAME; // Allows us to access the environment variables defined in the Cloudformation template
 
+const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
 /**
  *
  * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
@@ -18,32 +20,21 @@ const EVALUATIONS_DDB_TABLE_NAME = process.env.EVALUATIONS_DDB_TABLE_NAME; // Al
  */
 exports.lambdaHandler = async (event, context) => {
     try {
+        let indicator = auth.verifyAuthorizerExistence(event);
+        if (indicator != null) {
+            return indicator;
+        }
+        indicator = auth.verifyValidRole(event, validRoles);
+        if (indicator != null) {
+            return indicator;
+        }
         const requestBody = JSON.parse(event.body);
 
         
-        // Information from the DELETE request needed to remove an evaluation
-        // if (!("EvalId" in requestBody) || requestBody.EvalId == "") {
-        //     response = {
-		// 		statusCode: 400,
-		// 		body: "This request is missing a necessary parameter - EvalId.",
-		// 		headers: {
-		// 			'Access-Control-Allow-Origin': '*',
-		// 		},
-		// 	}
-		// 	return response;
-        // }
+        
         const evalId = event.pathParameters.userId;
 
-        // if (!("CompetencyId_Timestamp" in requestBody) || requestBody.CompetencyId_Timestamp == "") {
-        //     response = {
-		// 		statusCode: 400,
-		// 		body: "This request is missing a necessary parameter - CompetencyId_Timestamp.",
-		// 		headers: {
-		// 			'Access-Control-Allow-Origin': '*',
-		// 		},
-		// 	}
-		// 	return response;
-        // }
+      
         const compId = event.pathParameters.compId;
         const timestamp = event.pathParameters.timeStamp;
 
