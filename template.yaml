@@ -717,6 +717,14 @@ Resources:
           AttributeDataType: String
           Mutable: true
           Required: false
+        - Name: cohort
+          AttributeDataType: String
+          Mutable: true
+          Required: false
+        - Name: gtid
+          AttributeDataType: String
+          Mutable: true
+          Required: false
   CognitoUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
