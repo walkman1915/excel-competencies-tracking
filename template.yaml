@@ -649,6 +649,41 @@ Resources:
       Environment:
         Variables:
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
+  DeactivateUserFunction:
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/users/{userId}/deactivate
+      Handler: deactivate.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
+      Runtime: nodejs12.x
+      Events:
+        DeactivateUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ExcelApi
+            Path: /users/{userId}/deactivate
+            Method: delete
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DeactivatePolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - cognito-idp:AdminDisableUser
+            # Add resources for DeleteComp
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref CompetenciesMasterDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref CompetenciesMasterDDBTable}
+              - !Sub
+                - arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${userPoolId}
+                - { userPoolId: !Ref CognitoUserPool}
+      Environment:
+        Variables:
+          USER_POOL_ID: !Ref CognitoUserPool
   AuthenticationLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
