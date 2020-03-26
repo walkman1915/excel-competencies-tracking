@@ -1,10 +1,16 @@
 let response;
 
 const auth = require('/opt/auth');
+const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
+const validate = require('/opt/validate');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const USERS_DDB_TABLE_NAME = process.env.USERS_DDB_TABLE_NAME; // Allows us to access the environment variables defined in the Cloudformation template
-const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
+
+/* CONSTANTS */
+const REQUIRED_ARGS = ["UserId", "UserInfo", "Role"];
+const ROLE_MUST_INCLUDE = ["Faculty/Staff", "Admin", "Student (current)", "Student (other)", "Student (graduate)", "Coach", "Mentor"];
+
 /**
  *
  * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
@@ -27,29 +33,32 @@ exports.lambdaHandler = async (event, context) => {
         if (indicator != null) {
             return indicator;
         }
+
+        // grab request body
         const requestBody = JSON.parse(event.body);
 
+        // check that each required field is valid
+        for (i = 0; i < REQUIRED_ARGS.length; i++) {
+            ret = validate.validateField(requestBody, REQUIRED_ARGS[i]);
+            if (ret != null) {
+                return ret;
+            }
+        }
+
+        // check if Role is one of the acceptable values
+        ret = validate.fieldIncludes(requestBody, "Role", ROLE_MUST_INCLUDE);
+        if (ret != null) {
+            return ret;
+        }
+
         // Information from the POST request needed to add a new user
-        if (!("UserId" in requestBody) || requestBody.UserId == "") {
-            return createMissingParameterErrorResponse("UserId");
-        }
         const userId = requestBody.UserId;
-
-        // TODO: decide what info must be present in UserInfo blob
-        if (!("UserInfo" in requestBody) || requestBody.UserInfo == "") {
-            return createMissingParameterErrorResponse("UserInfo");
-        }
         const userInfo = requestBody.UserInfo;
-
-        if (!("Role" in requestBody) || requestBody.Role == "") {
-            return createMissingParameterErrorResponse("Role");
-        }
         const role = requestBody.Role;
 
         // Cohort and GTID are optional, so if they are not present we set them to null
-        // TODO: can ensure cohort is present if this is a required field for all students
-        const cohort = ("Cohort" in requestBody && requestBody.Cohort != "")  ? requestBody.Cohort : null;
-        const gtId = ("GTId" in requestBody && requestBody.Email != "")  ? requestBody.GTId : null;
+        const cohort = validate.optionalField(requestBody, "Cohort");
+        const gtId = validate.optionalField(requestBody, "GTId");
         
         // Construct the user object to store in the database
         const user = {
@@ -90,15 +99,4 @@ function addUser(user) {
         TableName: USERS_DDB_TABLE_NAME,
         Item: user,
     }).promise();
-}
-
-function createMissingParameterErrorResponse(missingParameter) {
-    response = {
-        statusCode: 400,
-        body: "This request is missing a necessary parameter - " + missingParameter + ".",
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-        },
-    }
-    return response;
 }

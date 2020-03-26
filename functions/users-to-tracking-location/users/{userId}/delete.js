@@ -1,8 +1,10 @@
 let response;
 
+const auth = require('/opt/auth');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
-const COMPETENCIES_DDB_TABLE_NAME = process.env.COMPETENCIES_DDB_TABLE_NAME; // Allows us to access the environment variables defined in the Cloudformation template
+const USERS_TO_TRACKING_DDB_TABLE_NAME = process.env.USERS_TO_TRACKING_DDB_TABLE_NAME;
+const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
 
 /**
  *
@@ -18,36 +20,37 @@ const COMPETENCIES_DDB_TABLE_NAME = process.env.COMPETENCIES_DDB_TABLE_NAME; // 
  */
 exports.lambdaHandler = async (event, context) => {
     try {
-        const competencyId = event.pathParameters.competencyId;
-        console.log(event.requestContext.authorizer.claims)
-		if (isEmptyObject(competencyId)) {
+        let indicator = auth.verifyAuthorizerExistence(event);
+        if (indicator != null) {
+            return indicator;
+        }
+        indicator = auth.verifyValidRole(event, validRoles);
+        if (indicator != null) {
+            return indicator;
+        }
+        
+        const userId = event.pathParameters.userId;
+
+		if (isEmptyObject(userId)) {
 			response = {
 				statusCode: 400,
-				body: "This request is missing a necessary parameter - CompetencyId.",
+				body: "This request is missing a necessary parameter - UserId.",
 				headers: {
 					'Access-Control-Allow-Origin': '*',
 				},
 			};
 			return response;
-		} else if (!/^\d+$/.test(competencyId)) {
-			response = {
-				statusCode: 400,
-				body: "This request must contain a non-empty CompetencyId with only numeric characters. You entered : " + JSON.stringify(competencyId),
-				headers: {
-					'Access-Control-Allow-Origin': '*',
-				},
-			};
-			return response;
-		}
+         }
 
         // Check if an evaluation with the given parameters is in the database
-        const competency = await getCompetency(competencyId);
+        const getResponse = await getUserToTracking(userId);
 
-		//If the response didn't have an item in it (nothing was found in the database), return a 404 (not found)
-        if (!("Item" in competency)) {
+       
+        //If the response didn't have an item in it (nothing was found in the database), return a 404 (not found)
+        if (!("Item" in getResponse)) {
             response = {
                 statusCode: 404,
-                body: "A competency was not found with the given id  - " + JSON.stringify(competencyId),
+                body: "A user to tracking entry was not found for the given user  - " + userId,
                 headers: {
                     'Access-Control-Allow-Origin': '*',
                 },
@@ -55,9 +58,12 @@ exports.lambdaHandler = async (event, context) => {
             return response;
         }
 
+        // Remove user to tracking location entry from the database
+        await removeUserToTracking(userId);
+
         response = {
-            statusCode: 200,
-            body: JSON.stringify(competency),
+            statusCode: 204,
+            body: "The user to tracking entry with the following id has been deleted - " + userId,
             headers: {
                 'Access-Control-Allow-Origin': '*',
             },
@@ -71,15 +77,29 @@ exports.lambdaHandler = async (event, context) => {
 };
 
 /**
- * @param {Object} competencyId - the competencyId key that will be removed from the database
+ * @param {Object} userId - the userId key that will be removed from the database
  * 
  * @returns {Object} object - a promise representing this delete request
  */
-function getCompetency(competencyId) {
-    return ddb.get({
-        TableName: COMPETENCIES_DDB_TABLE_NAME,
+function removeUserToTracking(userId) {
+    return ddb.delete({
+        TableName: USERS_TO_TRACKING_DDB_TABLE_NAME,
         Key: {
-            "CompetencyId" : competencyId,
+            "UserId" : userId,
+        }
+    }).promise();
+}
+
+/**
+ * @param {Object} userId - the userId key that will be removed from the database
+ * 
+ * @returns {Object} object - a promise representing this user to tracking item
+ */
+function getUserToTracking(userId) {
+    return ddb.get({
+        TableName: USERS_TO_TRACKING_DDB_TABLE_NAME,
+        Key: {
+            "UserId" : userId,
         }
     }).promise();
 }
@@ -93,7 +113,7 @@ function getCompetency(competencyId) {
 function isEmptyObject(obj) {
     for (var key in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            return false;
+        return false;
         }
     }
     return true;

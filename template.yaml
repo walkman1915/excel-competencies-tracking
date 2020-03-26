@@ -84,6 +84,7 @@ Resources:
       Handler: post.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
+        - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         GetCompetencies:
@@ -115,6 +116,7 @@ Resources:
       Handler: post.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
+        - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         AddEvaluation:
@@ -338,6 +340,7 @@ Resources:
       Handler: post.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
+        - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         AddEvaluationScale:
@@ -466,6 +469,7 @@ Resources:
       Handler: post.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
+        - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         AddCompetencies:
@@ -493,10 +497,11 @@ Resources:
   AddTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking_location_to_competencies/
+      CodeUri: functions/tracking-location-to-competencies/
       Handler: post.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
+        - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         AddTrackingLocationToCompetencies:
@@ -526,7 +531,7 @@ Resources:
   DeleteTrackingLocationToCompetenciesFunction: 
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking_location_to_competencies//{locationId}
+      CodeUri: functions/tracking-location-to-competencies//{locationId}
       Handler: delete.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
@@ -558,7 +563,7 @@ Resources:
   GetSpecificTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking_location_to_competencies/{locationId}
+      CodeUri: functions/tracking-location-to-competencies/{locationId}
       Handler: get.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
@@ -692,6 +697,299 @@ Resources:
       ContentUri: auth/layer/
       CompatibleRuntimes:
         - nodejs12.x        
+  GetUsersForTrackingLocationFunction: # Function for getting all of the evaluations for a specific student
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/users-to-tracking-location/{trackingLocationId}/{getAllUsersFlag}
+      Handler: get.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        GetEvaluationsForUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ExcelApi
+            Path: /users-to-tracking-location/{trackingLocationId}/{getAllUsersFlag}
+            Method: get
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Scan
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref UsersToTrackingLocationDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref UsersToTrackingLocationDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref UsersDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref UsersDDBTable}
+      Environment:
+        Variables:
+          USERS_TO_TRACKING_LOCATION_DDB_TABLE_NAME: !Ref UsersToTrackingLocationDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code          
+          USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
+  GetStudentsForSpecificMentorFunction: # Function for getting all students assigned to a specific mentor
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/users/mentors/{userId}/students
+      Handler: get.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        GetEvaluationsForUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ExcelApi
+            Path: /users/mentors/{userId}/students
+            Method: get
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+            - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Scan
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersToTrackingLocationDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersToTrackingLocationDDBTable}
+      Environment:
+        Variables:
+          USERS_TO_TRACKING_DDB_TABLE_NAME: !Ref UsersToTrackingLocationDDBTable
+          USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
+  GetMentorsForSpecificStudentFunction: # Function for getting all students assigned to a specific mentor
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/users/students/{userId}/mentors
+      Handler: get.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        GetEvaluationsForUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ExcelApi
+            Path: /users/students/{userId}/mentors
+            Method: get
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+            - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Scan
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersToTrackingLocationDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersToTrackingLocationDDBTable}
+      Environment:
+        Variables:
+          USERS_TO_TRACKING_DDB_TABLE_NAME: !Ref UsersToTrackingLocationDDBTable
+          USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
+  GetMentorsFunction: # Function for getting all users who are mentors
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/users/mentors/
+      Handler: get.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        GetEvaluationsForUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ExcelApi
+            Path: /users/mentors/
+            Method: get
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+            - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Scan
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersDDBTable}
+      Environment:
+        Variables:
+          USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
+  AddUserToTrackingLocationFunction: # Function for getting all users who are mentors
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/users-to-tracking-location
+      Handler: post.lambdaHandler
+      Layers:
+        - !Ref DataValidation
+        - !Ref AuthenticationLayer
+      Runtime: nodejs12.x
+      Events:
+        GetEvaluationsForUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ExcelApi
+            Path: /users-to-tracking-location
+            Method: post
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+            - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:Scan
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersToTrackingLocationDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersToTrackingLocationDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
+      Environment:
+        Variables:
+          USERS_TO_TRACKING_DDB_TABLE_NAME: !Ref UsersToTrackingLocationDDBTable
+          USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
+          TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME : !Ref TrackingLocationToCompetenciesDDBTable
+  GetAllUserToTrackingLocationFunction: # Function for getting all users who are mentors
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/users-to-tracking-location
+      Handler: get.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        GetEvaluationsForUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ExcelApi
+            Path: /users-to-tracking-location
+            Method: get
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+            - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Scan
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersToTrackingLocationDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersToTrackingLocationDDBTable}
+      Environment:
+        Variables:
+          USERS_TO_TRACKING_DDB_TABLE_NAME: !Ref UsersToTrackingLocationDDBTable
+  DeleteUserToTrackingLocationFunction: # Function for getting all users who are mentors
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/users-to-tracking-location/users/{userId}
+      Handler: delete.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
+      Runtime: nodejs12.x
+      Events:
+        GetEvaluationsForUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ExcelApi
+            Path: /users-to-tracking-location/users/{userId}
+            Method: delete
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+            - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+                - dynamodb:GetItem
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersToTrackingLocationDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersToTrackingLocationDDBTable}
+      Environment:
+        Variables:
+          USERS_TO_TRACKING_DDB_TABLE_NAME: !Ref UsersToTrackingLocationDDBTable
+  DeleteUserFunction:
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/users/{userId}
+      Handler: delete.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
+      Runtime: nodejs12.x
+      Events:
+        GetCompetencies:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ExcelApi
+            Path: /users/{userId}
+            Method: delete
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBDeletePolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - dynamodb:DeleteItem
+              - dynamodb:GetItem
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref UsersDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref UsersDDBTable}
+      Environment:
+        Variables:
+          USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
+  DataValidation:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+        LayerName: sam-app-common-layer
+        Description: Data validation for other requests
+        ContentUri: functions/validation/
+        CompatibleRuntimes:
+          - nodejs12.x
+
+
 
   ############ DynamoDB Databases ############
   CompetenciesMasterDDBTable: # Master table to store info about each competency

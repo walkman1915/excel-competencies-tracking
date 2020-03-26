@@ -1,14 +1,16 @@
 let response;
 
 const auth = require('/opt/auth');
+const validate = require('/opt/validate');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const EVALUATIONS_DDB_TABLE_NAME = process.env.EVALUATIONS_DDB_TABLE_NAME; // Allows us to access the environment variables defined in the Cloudformation template
 
 /*CONSTANT VALUES */
-const validEvalScores = ["0", "1", "2", "3", "4", "N"];
-const validEvidence = ["Direct observation", "Assessment", "Report from employer", "Report from coach"];
-const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
+const REQUIRED_ARGS = ["UserId", "CompetencyId", "Year", "Month", "Day", "UserIdEvaluator", "EvaluationScore", "Comments", "Evidence", "Approved"];
+const VALID_EVIDENCE = ["Direct observation", "Assessment", "Report from employer", "Report from coach"];
+const VALID_EVAL_SCORES = ["0", "1", "2", "3", "4", "N"];
+
 
 /**
  *
@@ -39,28 +41,16 @@ exports.lambdaHandler = async (event, context) => {
         const requestBody = JSON.parse(event.body);
         
         // Information from the POST request needed to add a new evaluation
-        if (!("UserId" in requestBody) || requestBody.UserId == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'UserId' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
+        
+        for (i = 0; i < REQUIRED_ARGS.length; i++) {
+            ret = validate.validateField(requestBody, REQUIRED_ARGS[i]);
+            if (ret != null) {
+                return ret;
             }
-            return response;
         }
+
         const userId = requestBody.UserId;
 
-        if (!("CompetencyId" in requestBody) || requestBody.CompetencyId == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'CompetencyId' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
         const compId = requestBody.CompetencyId;
 
         let now = new Date();
@@ -68,41 +58,11 @@ exports.lambdaHandler = async (event, context) => {
 
         const comp_stamp = compId + "_" + timeStamp;
 
-        if (!("Year" in requestBody) || requestBody.Year == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'Year' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
         const year = requestBody.Year;
 
-        if (!("Month" in requestBody) || requestBody.Month == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'Month' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
         //Note, the date is indexed at 0, so 11 is December, 10 is November, etc.
         const month = requestBody.Month;
 
-        if (!("Day" in requestBody) || requestBody.Day == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'Day' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
         //The day is not indexed at 0, a day of 6 is the 6th of the month
         const day = requestBody.Day;
 
@@ -119,84 +79,25 @@ exports.lambdaHandler = async (event, context) => {
             return response;
         }
 
-        if (!("UserIdEvaluator" in requestBody) || requestBody.UserIdEvaluator == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'UserIdEvaluator' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
         const userIdEvaluator = requestBody.UserIdEvaluator;
 
-        if (!("EvaluationScore" in requestBody) || requestBody.EvaluationScore == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'EvaluationScore' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
         const evalScore = requestBody.EvaluationScore;
-        if (!(validEvalScores.includes(evalScore))) {
-            response = {
-                statusCode: 400,
-                body: "Evaluation score was not valid, given value: '" + evalScore + "'. Expected values: " + validEvalScores.toString(),
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
+
+        ret = validate.fieldIncludes(requestBody, "EvaluationScore", VALID_EVAL_SCORES);
+        if (ret != null) {
+            return ret;
         }
+
         //TODO: Should comments be optional, or at least allowed to be blank?
-        if (!("Comments" in requestBody) || requestBody.Comments == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'Comments' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
         const comments = requestBody.Comments;
 
-        if (!("Evidence" in requestBody) || requestBody.Evidence == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'Evidence' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
         const evidence = requestBody.Evidence;
-        if (!(validEvidence.includes(evidence))) {
-            response = {
-                statusCode: 400,
-                body: "Evidence was not valid, given value: '" + evidence + "'. Expected values: " + validEvidence.toString(),
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
+
+        ret = validate.fieldIncludes(requestBody, "Evidence", VALID_EVIDENCE);
+        if (ret != null) {
+            return ret;
         }
 
-        if (!("Approved" in requestBody) || requestBody.Approved == "") {
-            response = {
-                statusCode: 400,
-                body: "Required body argument 'Approved' was not specified",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
-        }
         const approved = requestBody.Approved;
 
 
