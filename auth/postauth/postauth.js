@@ -38,6 +38,12 @@ exports.lambdaHandler = async (event, context, callback) => {
             UserId: userId
 
         }
+        if ('custom:cohort' in attrs) {
+            user.Cohort = attrs["custom:cohort"];
+        }
+        if ('custom:gtid' in attrs) {
+            user.GTId = attrs["custom:gtid"]
+        }
         await addUser(user)
         callback(null, event);
     } catch(err) {

@@ -475,9 +475,9 @@ Resources:
         AddCompetencies:
           Type: Api
           Properties:
-              RestApiId: !Ref ExcelApi
-              Path: /competencies
-              Method: post
+            RestApiId: !Ref ExcelApi
+            Path: /competencies
+            Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
