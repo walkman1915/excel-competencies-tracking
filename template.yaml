@@ -12,6 +12,7 @@ Globals:
   Function:
     Timeout: 3
 Resources:
+
   ############ Lambda Functions ############
   ExportEvaluationsFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
@@ -58,7 +59,9 @@ Resources:
               - !Sub
                 - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
                 - { tableName: !Ref CompetenciesMasterDDBTable}
-              - 
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${bucketName}/index/*
+                - { bucketName: !Ref EvaluationsExportS3Bucket}
       Environment:
         Variables:
           EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code
@@ -843,8 +846,11 @@ Resources:
         CompatibleRuntimes:
           - nodejs12.x
 
-
-
+  ############ S3 Buckets ##################
+  EvaluationsExportS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: "evaluations-export"
   ############ DynamoDB Databases ############
   CompetenciesMasterDDBTable: # Master table to store info about each competency
     Type: AWS::DynamoDB::Table
