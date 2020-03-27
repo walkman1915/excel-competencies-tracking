@@ -93,6 +93,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /users
             Method: post
+            Auth:
+              Authorizer: NONE # TODO: Delete this line; this is only to remove the authorizer for the front-end teams to temporarily test and debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
@@ -125,6 +127,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /evaluations
             Method: post
+            Auth:
+              Authorizer: NONE # TODO: Delete this line; this is only to remove the authorizer for the front-end teams to temporarily test and debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
@@ -156,6 +160,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /evaluations/{userId}/{compId}/{timeStamp}
             Method: delete
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBDeletePolicy # Creates a specific, custom inline policy
@@ -188,6 +194,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /evaluations
             Method: get
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
@@ -220,6 +228,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /evaluations/{userId}
             Method: get
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
@@ -252,6 +262,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /evaluations/{userId}/{compId}
             Method: get
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
@@ -284,6 +296,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /evaluations/{userId}/{compId}/{timeStamp}
             Method: get
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
@@ -316,6 +330,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /evaluationScale
             Method: get
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
@@ -349,6 +365,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /evaluationScale
             Method: post
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
@@ -380,6 +398,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /competencies # What should the official API url be? It will be whatever you type here
             Method: get # Which HTTP method (get, post, delete, etc.) should will invoke this lambda when an API call is made at this path?
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBGetAndScanPolicy # Creates a specific, custom inline policy
@@ -413,6 +433,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /competencies/{competencyId}
             Method: delete
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBDeleteAndGetPolicy # Creates a specific, custom inline policy
@@ -446,6 +468,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /competencies/{competencyId}
             Method: get
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
@@ -478,6 +502,8 @@ Resources:
               RestApiId: !Ref ExcelApi
               Path: /competencies
               Method: post
+              Auth:
+                Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
@@ -510,6 +536,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /tracking-locations-to-competencies
             Method: post
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
@@ -543,6 +571,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /tracking-locations-to-competencies/{locationId}
             Method: delete
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBDeletePolicy # Creates a specific, custom inline policy
@@ -575,6 +605,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /tracking-locations-to-competencies/{locationId}
             Method: get
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBGetPolicy
@@ -606,6 +638,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /tracking-locations-to-competencies/
             Method: get
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBGetPolicy
@@ -638,6 +672,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /users/{userId}
             Method: get
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBGetPolicy
@@ -669,6 +705,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /users/{userId}/deactivate
             Method: delete
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DeactivatePolicy # Creates a specific, custom inline policy
@@ -710,6 +748,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /users-to-tracking-location/{trackingLocationId}/{getAllUsersFlag}
             Method: get
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
@@ -747,6 +787,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /users/mentors/{userId}/students
             Method: get
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
             - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
@@ -784,6 +826,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /users/students/{userId}/mentors
             Method: get
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
             - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
@@ -821,6 +865,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /users/mentors/
             Method: get
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
             - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
@@ -854,6 +900,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /users-to-tracking-location
             Method: post
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
             - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
@@ -899,6 +947,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /users-to-tracking-location
             Method: get
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
             - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
@@ -931,6 +981,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /users-to-tracking-location/users/{userId}
             Method: delete
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
             - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
@@ -963,6 +1015,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /users/{userId}
             Method: delete
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
           - Sid: DynamoDBDeletePolicy # Creates a specific, custom inline policy
@@ -993,6 +1047,8 @@ Resources:
             RestApiId: !Ref ExcelApi
             Path: /users/students/
             Method: get
+            Auth:
+              Authorizer: NONE # TODO: Delete this line b/c it disables the authentication; only temporary to debug the CORS issue
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
             - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
