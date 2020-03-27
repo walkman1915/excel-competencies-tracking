@@ -6,7 +6,7 @@ samconfig.toml
 
 # Ignore AWS SAM build files
 .aws-sam/
-
+aws
 # Igonre Visual Studio files
 .vs/
 

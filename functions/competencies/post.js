@@ -1,5 +1,6 @@
 let response;
 
+const auth = require('/opt/auth');
 const validate = require('/opt/validate');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
@@ -10,6 +11,7 @@ const REQUIRED_ARGS = ["CompetencyId", "CompetencyTitle", "Domain", "Subcategory
 const VALID_DOMAINS = ["TRANSPORTATION", "EMPLOYMENT_AND_CAREERS", "HEALTH_AND_WELLNESS", "FINANCIAL_LITERACY", "HOUSING", "SOCIAL_AND_LEADERSHIP", "TECHNOLOGY_AND_COMMUNICATION"];
 const VALID_DIFFICULTY = ["1", "2", "3", "4"];
 const VALID_FREQUENCIES = ["MONTHLY", "SEMESTERLY", "YEARLY"];
+const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
 
 
 /**
@@ -26,6 +28,14 @@ const VALID_FREQUENCIES = ["MONTHLY", "SEMESTERLY", "YEARLY"];
  */
 exports.lambdaHandler = async (event, context) => {
     try {
+		let indicator = auth.verifyAuthorizerExistence(event);
+        if (indicator != null) {
+            return indicator;
+        }
+        indicator = auth.verifyValidRole(event, validRoles);
+        if (indicator != null) {
+            return indicator;
+        }
         const requestBody = JSON.parse(event.body);
 
 

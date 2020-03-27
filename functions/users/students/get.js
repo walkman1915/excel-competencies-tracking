@@ -26,12 +26,12 @@ exports.lambdaHandler = async (event, context) => {
         //QueryInput doc: https://docs.aws.amazon.com/sdkforruby/api/Aws/DynamoDB/Types/QueryInput.html
         let params = AWS.DynamoDB.QueryInput = {
             TableName: USERS_DDB_TABLE_NAME,
-            FilterExpression: "#Role = :Role",
+            FilterExpression: "contains(#Role, :Role)",
             ExpressionAttributeNames: {
                 '#Role': 'Role',
             },
             ExpressionAttributeValues: {
-                ':Role': "student",
+                ':Role': "Student",
             },
         };
         //Gets the query parameters from the get request, expecting possibly the limit (number per page)

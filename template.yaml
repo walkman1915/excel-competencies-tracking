@@ -11,20 +11,86 @@ Description: >
 Globals:
   Function:
     Timeout: 3
+Parameters:
+  CognitoUserPoolName:
+    Type: String
+    Default: excel-tracking-user-pool
+  CognitoUserPoolClientName:
+    Type: String
+    Default: excel-tracking-user-pool-client
 Resources:
   ############ Lambda Functions ############
+  PostAuthenticationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: auth/postauth
+      Handler: postauth.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        PreSignUp:
+          Type: Cognito
+          Properties:
+            UserPool: 
+              Ref: CognitoUserPool   
+            Trigger: PostAuthentication
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref UsersDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref UsersDDBTable}
+      Environment:
+        Variables:
+          USERS_DDB_TABLE_NAME: !Ref UsersDDBTable # Allows us to access the var "USERS_DDB_TABLE_NAME" in this lambda's javascript code 
+  PreSignUpFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: auth/signup
+      Handler: signup.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        PreSignUp:
+          Type: Cognito
+          Properties:
+            UserPool: !Ref CognitoUserPool
+            Trigger: PreSignUp
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref UsersDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref UsersDDBTable}
+      Environment:
+        Variables:
+          USERS_DDB_TABLE_NAME: !Ref UsersDDBTable # Allows us to access the var "USERS_DDB_TABLE_NAME" in this lambda's javascript code 
   AddUserFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
       CodeUri: functions/users/
       Handler: post.lambdaHandler
       Layers:
+        - !Ref AuthenticationLayer
         - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         GetCompetencies:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /users
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -49,12 +115,14 @@ Resources:
       CodeUri: functions/evaluations/
       Handler: post.lambdaHandler
       Layers:
+        - !Ref AuthenticationLayer
         - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         AddEvaluation:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluations
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -78,11 +146,14 @@ Resources:
     Properties:
       CodeUri: functions/evaluations/{userId}/{compId}/{timeStamp}  
       Handler: delete.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         DeleteEvaluation:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluations/{userId}/{compId}/{timeStamp}
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -107,11 +178,14 @@ Resources:
     Properties:
       CodeUri: functions/evaluations/
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetEvaluations:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluations
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -136,11 +210,14 @@ Resources:
     Properties:
       CodeUri: functions/evaluations/{userId}
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetEvaluationsForUser:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluations/{userId}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -165,11 +242,14 @@ Resources:
     Properties:
       CodeUri: functions/evaluations/{userId}/{compId}
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetEvaluationsForUserAndComp:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluations/{userId}/{compId}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -194,11 +274,14 @@ Resources:
     Properties:
       CodeUri: functions/evaluations/{userId}/{compId}/{timeStamp}
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetSpecificEvaluation:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluations/{userId}/{compId}/{timeStamp}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -223,11 +306,14 @@ Resources:
     Properties:
       CodeUri: functions/evaluationScale/
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetEvaluationScale:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluationScale
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -253,12 +339,14 @@ Resources:
       CodeUri: functions/evaluationScale/
       Handler: post.lambdaHandler
       Layers:
+        - !Ref AuthenticationLayer
         - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         AddEvaluationScale:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /evaluationScale
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -282,11 +370,14 @@ Resources:
     Properties:
       CodeUri: functions/competencies/ # Where does the Lambda's JavaScript file live in the folder directory? Aka the path from this file to the JS file you want
       Handler: get.lambdaHandler # {JS file name - .js} + . + {method name in that JS file}
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events: # Answers "What events can trigger this Lambda?". In this case, it's an API call with a GET method to /competencies
         GetCompetencies:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /competencies # What should the official API url be? It will be whatever you type here
             Method: get # Which HTTP method (get, post, delete, etc.) should will invoke this lambda when an API call is made at this path?
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -312,11 +403,14 @@ Resources:
     Properties:
       CodeUri: functions/competencies/{competencyId}
       Handler: delete.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         DeleteCompetencies:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /competencies/{competencyId}
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -342,11 +436,14 @@ Resources:
     Properties:
       CodeUri: functions/competencies/{competencyId}
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetSpecificCompetency:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /competencies/{competencyId}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -371,12 +468,14 @@ Resources:
       CodeUri: functions/competencies/
       Handler: post.lambdaHandler
       Layers:
+        - !Ref AuthenticationLayer
         - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         AddCompetencies:
           Type: Api
           Properties:
+              RestApiId: !Ref ExcelApi
               Path: /competencies
               Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -401,13 +500,15 @@ Resources:
       CodeUri: functions/tracking-location-to-competencies/
       Handler: post.lambdaHandler
       Layers:
+        - !Ref AuthenticationLayer
         - !Ref DataValidation
       Runtime: nodejs12.x
       Events:
         AddTrackingLocationToCompetencies:
           Type: Api
           Properties:
-            Path: /tracking-location-to-competencies
+            RestApiId: !Ref ExcelApi
+            Path: /tracking-locations-to-competencies
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -432,12 +533,15 @@ Resources:
     Properties:
       CodeUri: functions/tracking-location-to-competencies//{locationId}
       Handler: delete.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         DeleteEvaluation:
           Type: Api
           Properties:
-            Path: /tracking-location-to-competencies/{locationId}
+            RestApiId: !Ref ExcelApi
+            Path: /tracking-locations-to-competencies/{locationId}
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -461,12 +565,15 @@ Resources:
     Properties:
       CodeUri: functions/tracking-location-to-competencies/{locationId}
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
-        GetCompetencies:
+        GetSpecificLocation:
           Type: Api
           Properties:
-            Path: /tracking-location-to-competencies/{locationId}
+            RestApiId: !Ref ExcelApi
+            Path: /tracking-locations-to-competencies/{locationId}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -484,16 +591,51 @@ Resources:
       Environment:
         Variables:
           TRACKING_LOCATIONS_TO_COMPETENCIES_DDB: !Ref TrackingLocationToCompetenciesDDBTable 
+  GetAllTrackingLocationToCompetenciesFunction:
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/tracking-location-to-competencies/
+      Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
+      Runtime: nodejs12.x
+      Events:
+        GetAllLocations:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ExcelApi
+            Path: /tracking-locations-to-competencies/
+            Method: get
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DynamoDBGetPolicy
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Scan
+            Resource: # this should stay as well!
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
+      Environment:
+        Variables:
+          TRACKING_LOCATIONS_TO_COMPETENCIES_DDB: !Ref TrackingLocationToCompetenciesDDBTable 
   GetSpecificUserFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
       CodeUri: functions/users/{userId}
       Handler: get.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetCompetencies:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /users/{userId}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -512,6 +654,49 @@ Resources:
       Environment:
         Variables:
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
+  DeactivateUserFunction:
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/users/{userId}/deactivate
+      Handler: deactivate.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
+      Runtime: nodejs12.x
+      Events:
+        DeactivateUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ExcelApi
+            Path: /users/{userId}/deactivate
+            Method: delete
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+          - Sid: DeactivatePolicy # Creates a specific, custom inline policy
+            Effect: Allow
+            Action:
+              - cognito-idp:AdminDisableUser
+            # Add resources for DeleteComp
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                - { tableName: !Ref CompetenciesMasterDDBTable}
+              - !Sub
+                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                - { tableName: !Ref CompetenciesMasterDDBTable}
+              - !Sub
+                - arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${userPoolId}
+                - { userPoolId: !Ref CognitoUserPool}
+      Environment:
+        Variables:
+          USER_POOL_ID: !Ref CognitoUserPool
+  AuthenticationLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: excel-tracking-authentication-layer
+      Description: Token authentication for other requests
+      ContentUri: auth/layer/
+      CompatibleRuntimes:
+        - nodejs12.x        
   GetUsersForTrackingLocationFunction: # Function for getting all of the evaluations for a specific student
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -522,6 +707,7 @@ Resources:
         GetEvaluationsForUser:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /users-to-tracking-location/{trackingLocationId}/{getAllUsersFlag}
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -558,6 +744,7 @@ Resources:
         GetEvaluationsForUser:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /users/mentors/{userId}/students
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -594,6 +781,7 @@ Resources:
         GetEvaluationsForUser:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /users/students/{userId}/mentors
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -630,6 +818,7 @@ Resources:
         GetEvaluationsForUser:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /users/mentors/
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -656,11 +845,13 @@ Resources:
       Handler: post.lambdaHandler
       Layers:
         - !Ref DataValidation
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetEvaluationsForUser:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /users-to-tracking-location
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -705,6 +896,7 @@ Resources:
         GetEvaluationsForUser:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /users-to-tracking-location
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -729,11 +921,14 @@ Resources:
     Properties:
       CodeUri: functions/users-to-tracking-location/users/{userId}
       Handler: delete.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetEvaluationsForUser:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /users-to-tracking-location/users/{userId}
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -758,11 +953,14 @@ Resources:
     Properties:
       CodeUri: functions/users/{userId}
       Handler: delete.lambdaHandler
+      Layers:
+        - !Ref AuthenticationLayer
       Runtime: nodejs12.x
       Events:
         GetCompetencies:
           Type: Api
           Properties:
+            RestApiId: !Ref ExcelApi
             Path: /users/{userId}
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
@@ -782,6 +980,37 @@ Resources:
       Environment:
         Variables:
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
+  GetStudentsFunction: # Function for getting all users who are students
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/users/students/
+      Handler: get.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        GetEvaluationsForUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ExcelApi
+            Path: /users/students/
+            Method: get
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+            - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Scan
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersDDBTable}
+      Environment:
+        Variables:
+          USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
+  
   DataValidation:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -888,25 +1117,89 @@ Resources:
         WriteCapacityUnits: "5"
       TableName: "EvaluationScale"
 
+  ############ Authentication / API Gateway ############
+  ExcelApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      # Cors: "'*'"
+      Auth:
+        DefaultAuthorizer: MyCognitoAuthorizer
+        Authorizers:
+          MyCognitoAuthorizer:
+            UserPoolArn: !GetAtt CognitoUserPool.Arn
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Ref CognitoUserPoolName
+      # Policies: # Use this if you want to enforce various password settings
+      #   PasswordPolicy:
+      #     MinimumLength: 11
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: True
+      AutoVerifiedAttributes:
+        - email
+      # UsernameAttributes: # Use this if you want to mandate that their username is their email
+      #   - email
+      Schema:
+        - Name: name
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: role
+          AttributeDataType: String
+          Mutable: true
+          Required: false
+        - Name: cohort
+          AttributeDataType: String
+          Mutable: true
+          Required: false
+        - Name: gtid
+          AttributeDataType: String
+          Mutable: true
+          Required: false
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      ClientName: !Ref CognitoUserPoolClientName
+      GenerateSecret: false
+      SupportedIdentityProviders:
+        - COGNITO
+      CallbackURLs:
+        - https://www.google.com
+      AllowedOAuthFlows: # TODO: can we scope this back?
+        - code
+        - implicit
+      AllowedOAuthScopes: # TODO: can we scope this back?
+        - phone
+        - email
+        - openid
+        - profile
+        - aws.cognito.signin.user.admin
+      ExplicitAuthFlows: # TODO: can we scope this back?
+        - ALLOW_ADMIN_USER_PASSWORD_AUTH
+        - ALLOW_CUSTOM_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+  CognitoUserPoolDomain: 
+    Type: AWS::Cognito::UserPoolDomain 
+    Properties:
+      UserPoolId: !Ref CognitoUserPool 
+      Domain: "excel-tracking"
+
 
 Outputs: # These outputs are just for our benefit if we want quick access to the ARNs or HTTP address.
          # They're shown in the console after a successful 'sam deploy'
-  ExcelCompetenciesTrackingApi:
-    Description: API Gateway endpoint URL for Prod stage for Excel Competencies Tracking project
-    Value:
-      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
-  GetCompetenciesFunction: # For consistency's sake, keep this name the same as the function's resource name above
-    Description: Get Competencies Lambda Function ARN
-    Value:
-      Fn::GetAtt:
-      - GetCompetenciesFunction
-      - Arn
-  GetCompetenciesFunctionIamRole: # This must literally be {function's resource name} + "IamRole"
-    Description: Implicit IAM Role created for Get Competencies function
-    Value:
-      Fn::GetAtt:
-      - GetCompetenciesFunctionRole
-      - Arn
-  CompetenciesMasterDDBTable:
-    Description: Competencies Master Dynamo DB Table ARN
-    Value: !GetAtt CompetenciesMasterDDBTable.Arn
+  CognitoUserPoolId:
+    Description: "Cognito User Pool Id"
+    Value: !Ref CognitoUserPool
+
+  CognitoUserPoolClientId:
+    Description: "Cognito User Pool Client Id"
+    Value: !Ref CognitoUserPoolClient

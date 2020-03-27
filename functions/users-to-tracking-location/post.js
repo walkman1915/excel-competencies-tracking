@@ -1,5 +1,6 @@
 let response;
 
+const auth = require('/opt/auth');
 const validate = require('/opt/validate');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
@@ -10,6 +11,7 @@ const REQUIRED_ARGS = ["UserId"];
 const USERS_TO_TRACKING_DDB_TABLE_NAME = process.env.USERS_TO_TRACKING_DDB_TABLE_NAME;
 const USERS_DDB_TABLE_NAME = process.env.USERS_DDB_TABLE_NAME;
 const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME = process.env.TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME;
+const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
 /**
  *
  * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
@@ -24,6 +26,14 @@ const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME = process.env.TRACKING_L
  */
 exports.lambdaHandler = async (event, context) => {
     try {
+        let indicator = auth.verifyAuthorizerExistence(event);
+        if (indicator != null) {
+            return indicator;
+        }
+        indicator = auth.verifyValidRole(event, validRoles);
+        if (indicator != null) {
+            return indicator;
+        }
         const requestBody = JSON.parse(event.body);
 
         // check that each required field is valid
@@ -51,7 +61,7 @@ exports.lambdaHandler = async (event, context) => {
         // Shouldn't this compare lowercase "mentor"?
 
         // this is a mentor so we should have data in the StudentIds parameter only
-        if (getUser.Item.Role.toString().toLowerCase() === "Mentor") {
+        if (getUser.Item.Role.toString().toLowerCase() === "mentor") {
 
             // validating StudentIds
             ret = validate.validateField(requestBody, "StudentIds");

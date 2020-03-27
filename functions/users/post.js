@@ -1,5 +1,7 @@
 let response;
 
+const auth = require('/opt/auth');
+const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
 const validate = require('/opt/validate');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
@@ -23,6 +25,14 @@ const ROLE_MUST_INCLUDE = ["Faculty/Staff", "Admin", "Student (current)", "Stude
  */
 exports.lambdaHandler = async (event, context) => {
     try {
+        let indicator = auth.verifyAuthorizerExistence(event);
+        if (indicator != null) {
+            return indicator;
+        }
+        indicator = auth.verifyValidRole(event, validRoles);
+        if (indicator != null) {
+            return indicator;
+        }
 
         // grab request body
         const requestBody = JSON.parse(event.body);

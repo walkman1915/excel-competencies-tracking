@@ -1,9 +1,11 @@
 let response;
 
+const auth = require('/opt/auth');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const COMPETENCIES_DDB_TABLE_NAME = process.env.COMPETENCIES_DDB_TABLE_NAME; // Allows us to access the environment variables defined in the Cloudformation template
 
+const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
 /**
  *
  * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
@@ -18,8 +20,16 @@ const COMPETENCIES_DDB_TABLE_NAME = process.env.COMPETENCIES_DDB_TABLE_NAME; // 
  */
 exports.lambdaHandler = async (event, context) => {
     try {
+        let indicator = auth.verifyAuthorizerExistence(event);
+        if (indicator != null) {
+            return indicator;
+        }
+        indicator = auth.verifyValidRole(event, validRoles);
+        if (indicator != null) {
+            return indicator;
+        }
         const competencyId = event.pathParameters.competencyId;
-
+        
 		if (isEmptyObject(competencyId)) {
 			response = {
 				statusCode: 400,

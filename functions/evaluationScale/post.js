@@ -1,5 +1,7 @@
 let response;
 
+const auth = require('/opt/auth');
+const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
 const validate = require('/opt/validate');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
@@ -21,6 +23,14 @@ const VALID_EVIDENCE = ["0", "1", "2", "3", "4"];
  */
 exports.lambdaHandler = async (event, context) => {
     try {
+        let indicator = auth.verifyAuthorizerExistence(event);
+        if (indicator != null) {
+            return indicator;
+        }
+        indicator = auth.verifyValidRole(event, validRoles);
+        if (indicator != null) {
+            return indicator;
+        }
         const requestBody = JSON.parse(event.body);
 
         //Data validation

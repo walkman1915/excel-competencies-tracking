@@ -3,9 +3,9 @@ let response;
 const auth = require('/opt/auth');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
-const USERS_DDB_TABLE_NAME = process.env.USERS_DDB_TABLE_NAME; // Allows us to access the environment variables defined in the Cloudformation template
-const validRoles = ["Admin"];
 
+const USER_POOL_ID = process.env.USER_POOL_ID;
+const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
 /**
  *
  * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
@@ -28,7 +28,6 @@ exports.lambdaHandler = async (event, context) => {
         if (indicator != null) {
             return indicator;
         }
-        const requestBody = JSON.parse(event.body);
         // Information from the URL that is required to get a specific user
         if (!("userId" in event.pathParameters) || event.pathParameters.userId == "") {
             response = {
@@ -41,41 +40,37 @@ exports.lambdaHandler = async (event, context) => {
 			return response;
         }
         const userId = event.pathParameters.userId; // Get the userId from /users/{userId} path variable
-
+        var cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
+        console.log(USER_POOL_ID);
         console.log(userId);
-
-        // Query and get the specified user's info
-        const user = await getSpecificUser(userId);
-
-        console.log(user);
-
-        // If the user object is empty, it means there was no data found for that user ID in the database
-        if (isEmptyObject(user)) {
-
-            response = {
-                statusCode: 404,
-                body: "A user was not found with the given parameters",
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                },
-            }
-            return response;
+        let params = {
+            "UserPoolId": USER_POOL_ID,
+            "Username": userId
         }
+        let body;
+        let request = cognitoidentityserviceprovider.adminDisableUser(params);
+        console.log(await request.promise());
+        await request.send(function(err, data) {
+            console.log(err, data);
+            body = err + "" + data;
+        });
+        console.log(body);
+        // Query and get the specified user's info
+        // const user = await getSpecificUser(userId);
 
-        // Delete the user from the database
-        await deleteUser(userId);
-
-        console.log("Delete successful");
-
-        // Generate the response for a successful delete
+        var statusCode = 200;
+        // If the user object is empty, it means there was no data found for that user ID in the database
+        // if (isEmptyObject(user)) {
+        //     statusCode = 204; // A 204 code represents that the action was successful but there is no content
+        // }
+        
         response = {
-            statusCode: 200,
-            body: "Delete Successful",
+            statusCode: statusCode,
+            body: body,
             headers: {
                 'Access-Control-Allow-Origin': '*',
             },
-        }
-
+       }
     } catch (err) {
         console.log(err);
         return err;
@@ -83,21 +78,6 @@ exports.lambdaHandler = async (event, context) => {
 
     return response
 };
-
-/**
- 
- * @param {String} key - JSON object representing the key of the entry to remove
- * 
- * @returns {Object} object - a promise representing this delete request
- */
-function deleteUser(userId) {
-    return ddb.delete({
-        TableName: USERS_DDB_TABLE_NAME,
-        Key: {
-            "UserId": userId
-        }
-    }).promise();
-}
 
 /**
  * Gets a specific user via user ID and returns the entire entry for that user in JSON format (defined in the Database Table Structures document)

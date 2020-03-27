@@ -1,5 +1,6 @@
 let response;
 
+const auth = require('/opt/auth');
 const validate = require('/opt/validate');
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
@@ -9,6 +10,7 @@ const EVALUATIONS_DDB_TABLE_NAME = process.env.EVALUATIONS_DDB_TABLE_NAME; // Al
 const REQUIRED_ARGS = ["UserId", "CompetencyId", "Year", "Month", "Day", "UserIdEvaluator", "EvaluationScore", "Comments", "Evidence", "Approved"];
 const VALID_EVIDENCE = ["Direct observation", "Assessment", "Report from employer", "Report from coach"];
 const VALID_EVAL_SCORES = ["0", "1", "2", "3", "4", "N"];
+const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
 
 
 /**
@@ -25,8 +27,22 @@ const VALID_EVAL_SCORES = ["0", "1", "2", "3", "4", "N"];
  */
 exports.lambdaHandler = async (event, context) => {
     try {
-        const requestBody = JSON.parse(event.body);
+        console.log(event.requestContext);
+        let indicator = auth.verifyAuthorizerExistence(event);
+        if (indicator != null) {
+            return indicator;
+        }
+        indicator = auth.verifyValidRole(event, validRoles);
+        if (indicator != null) {
+            return indicator;
+        }
 
+
+
+        const requestBody = JSON.parse(event.body);
+        
+        // Information from the POST request needed to add a new evaluation
+        
         for (i = 0; i < REQUIRED_ARGS.length; i++) {
             ret = validate.validateField(requestBody, REQUIRED_ARGS[i]);
             if (ret != null) {
@@ -130,3 +146,49 @@ function addEval(eval) {
         Item: eval,
     }).promise();
 }
+
+// /**
+//  * Verifies that the event contains an authorizer with some claims
+//  * @param {Object} event the event object from the lambda
+//  * @returns the error response that should be returned if the authorizer is incorrect,
+//  * else returns null to indicate success
+//  */
+// function verifyAuthorizerExistence(event) {
+//     if (!("authorizer" in event.requestContext) || !("claims" in event.requestContext.authorizer)) {
+//         response = {
+//             statusCode: 401,
+//             body: "Authorization is missing from request",
+//             headers: {
+//                 'Access-Control-Allow-Origin': '*',
+//             },
+//         }
+//         return response;
+//     }
+//     return null;
+// }
+
+// function verifyValidRole(event, validRoles) {
+//     if (!("custom:role" in event.requestContext.authorizer.claims)) {
+//         response = {
+//             statusCode: 403,
+//             body: "User does not have any assigned role",
+//             headers: {
+//                 'Access-Control-Allow-Origin': '*',
+//             },
+//         }
+//         return response;
+//     }
+//     const role = event.requestContext.authorizer.claims['custom:role'];
+//     if (!validRoles.includes(role)) {
+//         response = {
+//             statusCode: 403,
+//             body: "User role is not permitted to perform this action. Role " + role 
+//             + " must be one of " + validRoles.toString(),
+//             headers: {
+//                 'Access-Control-Allow-Origin': '*',
+//             },
+//         }
+//         return response;
+//     }
+//     return null;
+// }
