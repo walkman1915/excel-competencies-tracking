@@ -31,7 +31,7 @@ exports.lambdaHandler = async (event, context) => {
                 '#Role': 'Role',
             },
             ExpressionAttributeValues: {
-                ':Role': "mentor",
+                ':Role': "Mentor",
             },
         };
         //Gets the query parameters from the get request, expecting possibly the limit (number per page)

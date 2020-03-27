@@ -46,7 +46,8 @@ exports.lambdaHandler = async (event, context) => {
                 },
             };
             return response;
-        } else if (getUser.Item.Role.toString().toLowerCase() !== "student") {
+        } else if (!getUser.Item.Role.toString().toLowerCase().includes("student")) {
+            console.log(getUser.Item.Role.toString().toLowerCase());
             response = {
                 statusCode: 404,
                 body: "We can only get the mentor of a student. The user with the entered id - " + userId + ", is not a student.",
@@ -119,13 +120,15 @@ exports.lambdaHandler = async (event, context) => {
 
         for(let i = 0; i < allUsersToTrackingItems.length; i++) {
             let currentMentorsStudents = allUsersToTrackingItems[i].StudentIds;
-            for (let j = 0; j < currentMentorsStudents.length; j++) {
-               console.log(currentMentorsStudents[j]);
-               console.log(userId);
-               if (currentMentorsStudents[j].toString() === userId) {
-                   let mentorObj = await getSpecificUser(allUsersToTrackingItems[i].UserId);
-                    mentors.push(mentorObj);
-               }
+            if (currentMentorsStudents != null){
+                for (let j = 0; j < currentMentorsStudents.length; j++) {
+                    console.log(currentMentorsStudents[j]);
+                    console.log(userId);
+                    if (currentMentorsStudents[j].toString() === userId) {
+                        let mentorObj = await getSpecificUser(allUsersToTrackingItems[i].UserId);
+                            mentors.push(mentorObj);
+                    }
+                }
             }
         }
 

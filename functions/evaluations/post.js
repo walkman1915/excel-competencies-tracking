@@ -10,6 +10,7 @@ const EVALUATIONS_DDB_TABLE_NAME = process.env.EVALUATIONS_DDB_TABLE_NAME; // Al
 const REQUIRED_ARGS = ["UserId", "CompetencyId", "Year", "Month", "Day", "UserIdEvaluator", "EvaluationScore", "Comments", "Evidence", "Approved"];
 const VALID_EVIDENCE = ["Direct observation", "Assessment", "Report from employer", "Report from coach"];
 const VALID_EVAL_SCORES = ["0", "1", "2", "3", "4", "N"];
+const validRoles = ["Admin", "Faculty/Staff", "Coach", "Mentor"];
 
 
 /**

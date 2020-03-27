@@ -447,6 +447,8 @@ When Evaluation Scale Scores are succesfully retrieved the response will have a 
     /{userID}
         GET    [Get a specific user given their id]
         DELETE [Delete a specific user given their id]
+        /deactivate
+               DELETE [Deactivate the account associated with this id]
     /mentors
         GET    [Get a all users that are mentors]
         /{userId}
@@ -456,6 +458,7 @@ When Evaluation Scale Scores are succesfully retrieved the response will have a 
         /{userId}
            /mentors
                GET [Get all mentors associated with the student who has the passed in userId]
+        GET [Get all users that are students]
 /users-to-tracking-location
     POST   [Add a new user to tracking location relationship]
     GET    [Get all user to tracking location relationships]

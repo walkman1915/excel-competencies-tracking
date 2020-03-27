@@ -61,7 +61,7 @@ exports.lambdaHandler = async (event, context) => {
         // Shouldn't this compare lowercase "mentor"?
 
         // this is a mentor so we should have data in the StudentIds parameter only
-        if (getUser.Item.Role.toString().toLowerCase() === "Mentor") {
+        if (getUser.Item.Role.toString().toLowerCase() === "mentor") {
 
             // validating StudentIds
             ret = validate.validateField(requestBody, "StudentIds");
