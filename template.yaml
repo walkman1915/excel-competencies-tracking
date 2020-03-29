@@ -814,6 +814,7 @@ Resources:
       CodeUri: functions/users/mentors/
       Handler: get.lambdaHandler
       Runtime: nodejs12.x
+      Timeout: 30
       Events:
         GetEvaluationsForUser:
           Type: Api
@@ -828,6 +829,7 @@ Resources:
               Action:
                 - dynamodb:GetItem
                 - dynamodb:Scan
+                - cognito-idp:AdminGetUser
               Resource:
                 - !Sub
                   - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
@@ -835,9 +837,13 @@ Resources:
                 - !Sub
                   - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
                   - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${userPoolId}
+                  - { userPoolId: !Ref CognitoUserPool}
       Environment:
         Variables:
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
+          USER_POOL_ID: !Ref CognitoUserPool
   AddUserToTrackingLocationFunction: # Function for getting all users who are mentors
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
