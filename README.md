@@ -344,12 +344,24 @@ In order for the POST to sucessfully execute the following conditions must be me
 - The user corresponding to UserId must be an existing user and be a mentor
 - All StudentIds entered must correspond to exisitng students users
 
+### Retrieving All Students
+
+All students which are currently in the system can be retrieved with a __GET__ request at the __"<endpoint_url>/users/students"__ level.  This response will contain a list of JSON objects, each represeting the user information of a student.  This response will not include students who have yet to log in to their account for the first time, as their information is not stored in the database.  By adding the optional flag Enabled=True to the end (__"<endpoint_url>/users/students/?Enabled=True"__), you will filter the responses to only include accounts that are still enabled.
+
+When students are successfully retrieved the response will have a __Status Code 200__.
+
 ### Retrieving All Students associated with a Mentor
 
 All students assigned to a given mentor can be retrieved with a __GET__ request at the __"<endpoint_url>/users/mentors/{userId}/students"__ level. The response will contain a list of JSON objects, each representing the user information of students mentored. To clarify, {userId} should be replaced with the userId of the mentor user whose students we want to locate. For example, a GET request to "<endpoint_url>/users/students/janeDoe7/mentors" will retrieve all students associated with the mentor "janeDoe7".
 
 When students are succesfully retrieved the response will have a __Status Code 200__.
 If there does not exist a mentor user with {userId} the response will have a __Status Code 404__: Resource Not Found.
+
+### Retrieving All Mentors
+
+All mentors which are currently in the system can be retrieved with a __GET__ request at the __"<endpoint_url>/users/mentors"__ level.  This response will contain a list of JSON objects, each represeting the user information of a mentor.  This response will not include mentors who have yet to log in to their account for the first time, as their information is not stored in the database.  By adding the optional flag Enabled=True to the end (__"<endpoint_url>/users/mentors/?Enabled=True"__), you will filter the responses to only include accounts that are still enabled.
+
+When mentors are successfully retrieved the response will have a __Status Code 200__.
 
 ### Retrieving All Mentors associated with a Student
 
