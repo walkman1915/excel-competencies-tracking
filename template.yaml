@@ -31,7 +31,6 @@ Resources:
           - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
             Effect: Allow
             Action:
-              - s3:PutObject,
               - dynamodb:GetItem
               - dynamodb:Scan
             Resource:
@@ -59,15 +58,22 @@ Resources:
               - !Sub
                 - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
                 - { tableName: !Ref CompetenciesMasterDDBTable}
+          - Sid: S3WritePolicy
+            Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource:
               - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${bucketName}/index/*
+                - arn:${AWS::Partition}:s3:::${bucketName}/*
                 - { bucketName: !Ref EvaluationsExportS3Bucket}
+            
       Environment:
         Variables:
           EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
           TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME: !Ref TrackingLocationToCompetenciesDDBTable
           COMPETENCIES_DDB_TABLE_NAME: !Ref CompetenciesMasterDDBTable
+          EXPORT_EVALUATION_BUCKET: !Ref EvaluationsExportS3Bucket
   AddUserFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -849,8 +855,6 @@ Resources:
   ############ S3 Buckets ##################
   EvaluationsExportS3Bucket:
     Type: AWS::S3::Bucket
-    Properties:
-      BucketName: "evaluations-export"
   ############ DynamoDB Databases ############
   CompetenciesMasterDDBTable: # Master table to store info about each competency
     Type: AWS::DynamoDB::Table
@@ -968,3 +972,4 @@ Outputs: # These outputs are just for our benefit if we want quick access to the
   CompetenciesMasterDDBTable:
     Description: Competencies Master Dynamo DB Table ARN
     Value: !GetAtt CompetenciesMasterDDBTable.Arn
+  

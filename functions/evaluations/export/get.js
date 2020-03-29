@@ -7,6 +7,7 @@ const EVALUATIONS_DDB_TABLE_NAME = process.env.EVALUATIONS_DDB_TABLE_NAME; // Al
 const COMPETENCIES_DDB_TABLE_NAME = process.env.COMPETENCIES_DDB_TABLE_NAME;
 const USERS_DDB_TABLE_NAME = process.env.USERS_DDB_TABLE_NAME;
 const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME = process.env.TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME;
+const EXPORT_EVALUATION_BUCKET = process.env.EXPORT_EVALUATION_BUCKET;
 
 /**
  *
@@ -130,6 +131,8 @@ exports.lambdaHandler = async (event, context) => {
         console.log(csv);
         await putObjectToS3(csv); // this does nothing currently, i think
 
+        console.log("successful upload!!!?!?!?");
+
         //Construct the response
         response = {
             statusCode: 200,
@@ -186,14 +189,20 @@ function putObjectToS3(data){
     var s3 = new AWS.S3();
     var params = {
         // these params are all super wrong, btw
-        Bucket : "aws-sam-cli-managed-default-samclisourcebucket-1t2kf2py9cg1f",
-        Key : "excel-competencies-tracking-sam-app/exports/" + Date.now() + "/out.csv",
+        Bucket : EXPORT_EVALUATION_BUCKET,
+        //Key : "excel-competencies-tracking-sam-app/exports/" + Date.now() + "/out.csv",
+        Key: "export1.csv",
         Body : data
     };
-    s3.putObject(params, function(err, data) {
-        if (err) console.log(err, err.stack); // an error occurred
-        else     console.log(data);           // successful response
-    });
+    // return s3.putObject(params, function(err, data) {
+    //     if (err) {
+    //         console.log(err, err.stack); // an error occurred
+    //     } else {
+    //         console.log("SUCCESSFUL UPLOAD");
+
+    //     }     console.log(data);           // successful response
+    // }).promise();
+    return s3.putObject(params).promise();
 }
 
 /**
