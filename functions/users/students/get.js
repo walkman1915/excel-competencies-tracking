@@ -2,9 +2,11 @@ let response;
 
 const randomBytes = require('crypto').randomBytes;
 const AWS = require('aws-sdk');
+var cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
 const ddb = new AWS.DynamoDB.DocumentClient();
 // Allows us to access the environment variables defined in the Cloudformation template.
 const USERS_DDB_TABLE_NAME = process.env.USERS_DDB_TABLE_NAME;
+const USER_POOL_ID = process.env.USER_POOL_ID;
 
 /**
  *
@@ -71,8 +73,36 @@ exports.lambdaHandler = async (event, context) => {
 
         // Generate the response body for a successful get
         let respBody = {};
-        respBody.Items = allStudents.Items; //Gets the actual items from the call
-
+        // respBody.Items = allStudents.Items; //Gets the actual items from the call
+        if (queryStringParameters != null && "Enabled" in queryStringParameters && queryStringParameters.Enabled == "True") {
+            let params = {
+                "UserPoolId": USER_POOL_ID,
+            }
+            respBody.Items = [];
+            for (let i = 0; i < allStudents.Items.length; i++) {
+                console.log(allStudents.Items[i]);
+                params["Username"] = allStudents.Items[i].UserId;
+                try {
+                    let request = cognitoidentityserviceprovider.adminGetUser(params);
+                    let student;
+                    console.log(await request.promise());
+                    await request.send(function(err, data) {
+                        console.log(err);
+                        console.log(data);
+                        student = data;
+                    }); 
+                    console.log(student);
+                    if (student.Enabled) {
+                        respBody.Items.push(allStudents.Items[i]);
+                    }
+                } catch (err) {
+                    console.log(err);
+                    continue;
+                }
+            }
+        } else {
+            respBody.Items = allStudents.Items; //Gets the actual items from the call
+        }
         //If there are more items after the provided ones (for example if a limit is set and this does not go to the
         // end of the table) then the response will return a LastEvaluatedKey, which can be passed back into the next
         // call as a ExclusiveStartKey in order to get the next 'page' of results.  This key is stringified and base-64
