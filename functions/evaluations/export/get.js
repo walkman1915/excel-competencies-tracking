@@ -1,5 +1,8 @@
 let response;
 
+// edit this if we want to change where CSV uploads go
+const PATH_TO_FILE_IN_BUCKET = "excel-competencies-tracking-sam-app/exports/";
+
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const s3 = new AWS.S3();
@@ -80,7 +83,8 @@ exports.lambdaHandler = async (event, context) => {
                 let studentUser = (await getSpecificUser(userIdBeingEvaluated));
                 if (!isEmptyObject((studentUser))) {
                     studentUser = studentUser.Item;
-                    studentUserName = studentUser.hasOwnProperty("UserInfo") ? studentUser.UserInfo["name"] : "";
+                    //studentUserName = studentUser.hasOwnProperty("UserInfo") ? studentUser.UserInfo["name"] : "";
+                    studentUserName = studentUser.hasOwnProperty("UserInfo") ? studentUser.UserInfo : "";
                     studentUserCohort = studentUser.hasOwnProperty("Cohort") ? studentUser.Cohort : "";
                 }
             }
@@ -91,7 +95,8 @@ exports.lambdaHandler = async (event, context) => {
                 let evaluator = (await getSpecificUser(currentEval.UserIdEvaluator));
                 if (!isEmptyObject((evaluator))) {
                     evaluator = evaluator.Item;
-                    evaluatorName = evaluator.hasOwnProperty("UserInfo") ? evaluator.UserInfo["name"] : "";
+                    //evaluatorName = evaluator.hasOwnProperty("UserInfo") ? evaluator.UserInfo["name"] : "";
+                    evaluatorName = evaluator.hasOwnProperty("UserInfo") ? evaluator.UserInfo : "";
                     evaluatorRole = evaluator.hasOwnProperty("Role") ? evaluator.Role : "";
                 }
             }
@@ -129,9 +134,9 @@ exports.lambdaHandler = async (event, context) => {
         }
 
         console.log(csv);
-        await putObjectToS3(csv); // this does nothing currently, i think
+        await putObjectToS3(csv);
 
-        console.log("successful upload!!!?!?!?");
+        console.log("Successful upload!");
 
         //Construct the response
         response = {
@@ -188,20 +193,10 @@ function getSpecificComp(competencyId) {
 function putObjectToS3(data){
     var s3 = new AWS.S3();
     var params = {
-        // these params are all super wrong, btw
         Bucket : EXPORT_EVALUATION_BUCKET,
-        //Key : "excel-competencies-tracking-sam-app/exports/" + Date.now() + "/out.csv",
-        Key: "export1.csv",
+        Key: PATH_TO_FILE_IN_BUCKET + Date.now() + "/out.csv",
         Body : data
     };
-    // return s3.putObject(params, function(err, data) {
-    //     if (err) {
-    //         console.log(err, err.stack); // an error occurred
-    //     } else {
-    //         console.log("SUCCESSFUL UPLOAD");
-
-    //     }     console.log(data);           // successful response
-    // }).promise();
     return s3.putObject(params).promise();
 }
 
