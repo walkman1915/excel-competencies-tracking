@@ -1,7 +1,7 @@
 let response;
 
 // edit this if we want to change where CSV uploads go
-const PATH_TO_FILE_IN_BUCKET = "excel-competencies-tracking-sam-app/exports/";
+const PATH_TO_FILE_IN_BUCKET = "export/";
 
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
@@ -134,11 +134,26 @@ exports.lambdaHandler = async (event, context) => {
         }
 
         console.log(csv);
-        await putObjectToS3(csv);
+        
+        // get a new date in a human readable format
+        let timestamp = new Date();
+
+        // prepend "Evaluations through " to readable name
+        let readable = "Evaluations through " + timestamp;
+        
+        // create the full path, also can be used later to retrieve the file from the bucket
+        let path = PATH_TO_FILE_IN_BUCKET + readable + ".csv";
+        
+        // for debug
+        console.log(path);
+
+        // helper to put object into S3 bucket
+        await putObjectToS3(csv, path);
 
         console.log("Successful upload!");
 
         //Construct the response
+        // maybe change this to just be "Success!"? 
         response = {
             statusCode: 200,
             body: JSON.stringify(respBody),
@@ -190,11 +205,10 @@ function getSpecificComp(competencyId) {
     }).promise();
 }
 
-function putObjectToS3(data){
-    var s3 = new AWS.S3();
+function putObjectToS3(data, path){
     var params = {
         Bucket : EXPORT_EVALUATION_BUCKET,
-        Key: PATH_TO_FILE_IN_BUCKET + Date.now() + "/out.csv",
+        Key: path,
         Body : data
     };
     return s3.putObject(params).promise();
