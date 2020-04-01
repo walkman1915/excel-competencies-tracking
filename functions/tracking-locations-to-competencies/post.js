@@ -116,7 +116,7 @@ exports.lambdaHandler = async (event, context) => {
 
         // Generate the response for a successful post
         response = {
-            statusCode: 201,
+            statusCode: 200,
             body: JSON.stringify(tracking_location),
             headers: {
                 'Access-Control-Allow-Origin': '*',

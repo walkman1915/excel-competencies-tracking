@@ -497,7 +497,7 @@ Resources:
   AddTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking-location-to-competencies/
+      CodeUri: functions/tracking-locations-to-competencies/
       Handler: post.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
@@ -531,7 +531,7 @@ Resources:
   DeleteTrackingLocationToCompetenciesFunction: 
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking-location-to-competencies//{locationId}
+      CodeUri: functions/tracking-locations-to-competencies//{locationId}
       Handler: delete.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
@@ -563,7 +563,7 @@ Resources:
   GetSpecificTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking-location-to-competencies/{locationId}
+      CodeUri: functions/tracking-locations-to-competencies/{locationId}
       Handler: get.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
@@ -594,7 +594,7 @@ Resources:
   GetAllTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking-location-to-competencies/
+      CodeUri: functions/tracking-locations-to-competencies/
       Handler: get.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
@@ -1047,6 +1047,7 @@ Resources:
         ContentUri: functions/validation/
         CompatibleRuntimes:
           - nodejs12.x
+  
 
 
 
@@ -1150,7 +1151,7 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
-      Cors: "'*'"
+      # Cors: "'*'"
       Auth:
         DefaultAuthorizer: MyCognitoAuthorizer
         Authorizers:
