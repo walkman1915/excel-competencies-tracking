@@ -12,6 +12,10 @@ const USERS_DDB_TABLE_NAME = process.env.USERS_DDB_TABLE_NAME;
 const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME = process.env.TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME;
 const EXPORT_EVALUATION_BUCKET = process.env.EXPORT_EVALUATION_BUCKET;
 
+//Added by Maxwell for Simple Email Services
+var nodemailer = require('nodemailer');
+var ses = new AWS.SES();
+
 /**
  *
  * Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
@@ -144,6 +148,9 @@ exports.lambdaHandler = async (event, context) => {
         // create the full path, also can be used later to retrieve the file from the bucket
         let path = PATH_TO_FILE_IN_BUCKET + readable + ".csv";
         
+        // create another variable for just the file name, may be deleted later
+        let filename = readable + ".csv";
+
         // for debug
         console.log(path);
 
@@ -151,6 +158,16 @@ exports.lambdaHandler = async (event, context) => {
         await putObjectToS3(csv, path);
 
         console.log("Successful upload!");
+
+
+        
+        
+        
+        var emailAddress = 'xavier17victor@gmail.com';
+        
+        sendEmail(EXPORT_EVALUATION_BUCKET, path,emailAddress);
+        
+        console.log("Currently Past Mail Section");
 
         //Construct the response
         // maybe change this to just be "Success!"? 
@@ -227,4 +244,64 @@ function isEmptyObject(obj) {
         }
     }
     return true;
+}
+
+function getS3File(bucket, key) {
+    return new Promise(function (resolve, reject) {
+        s3.getObject(
+            {
+                Bucket: bucket,
+                Key: key
+            },
+            function (err, data) {
+                if (err) return reject(err);
+                else return resolve(data);
+            }
+        );
+    })
+}
+
+function sendEmail(bucketName, fileName, emailAddress) {
+    
+    getS3File(bucketName, fileName)
+        .then(function (fileData) {
+    
+            var mailOptions = {
+                from: emailAddress,
+                subject: 'This is an email sent from a Lambda function!',
+                html: `<p>You got a contact message from: someone </b></p>`,
+                to: emailAddress,
+                // bcc: Any BCC address you want here in an array,
+                attachments: [
+                    {
+                        filename: "An export of Excel Program evaluations",
+                        content: fileData.Body
+                    }
+                ]
+            };
+        
+            console.log('Creating SES transporter');
+            // create Nodemailer SES transporter
+            var transporter = nodemailer.createTransport({
+                SES: new AWS.SES({ apiVersion: "2020-04-03" })
+            });
+
+            // send email
+            console.log('Attempting to send email');
+            transporter.sendMail(mailOptions, function (err, info) {
+                if (err) {
+                    console.log(err);
+                    console.log('Error sending email');
+                    
+                } else {
+                    console.log('Email sent successfully');
+                    
+                }
+            });
+        })
+        .catch(function (error) {
+            console.log(error);
+            console.log('Error getting attachment from S3');
+            
+        });
 }
