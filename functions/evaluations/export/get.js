@@ -1,8 +1,8 @@
 let response;
+
 // edit this if we want to change where CSV uploads go
 const PATH_TO_FILE_IN_BUCKET = "export/";
 
-const MailComposer = require("nodemailer/lib/mail-composer");
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const s3 = new AWS.S3();
@@ -160,19 +160,6 @@ exports.lambdaHandler = async (event, context) => {
 
         var file = await getS3File(path);
         console.log("START EMAIL SECTION");
-
-        const mail = mailcomposer({
-            from: 'dds7@gatech.edu',
-            to: 'dds7@gatech.edu',
-            subject: 'Test Files',
-            text: 'Hey folks, this is a test message from SES with an attachment.',
-            attachments: [
-                {
-                    path: '/tmp/file.docx'
-                },
-            ],
-        });
-
         var emailParams = {
             Destination: {
                 ToAddresses: [
@@ -286,4 +273,8 @@ function getS3File(key) {
         Key: key,
     };
     return s3.getObject(params).promise();
+}
+
+async function sendEmail(file, emailAddress) {
+
 }
