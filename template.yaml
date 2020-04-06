@@ -66,7 +66,25 @@ Resources:
               - !Sub
                 - arn:${AWS::Partition}:s3:::${bucketName}/*
                 - { bucketName: !Ref EvaluationsExportS3Bucket}
-            
+          - Sid: S3ReadPolicy
+            Effect: Allow
+            Action: 
+              - s3:GetObject
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:s3:::${bucketName}/*
+                - { bucketName: !Ref EvaluationsExportS3Bucket}
+          - Sid: SESCrudPolicy
+            Effect: Allow
+            Action:
+              - ses:SendEmail
+              - ses:SendRawEmail
+              - ses:GetIdentityVerificationAttributes
+              - ses:VerifyEmailIdentity
+            Resource:
+              - !Sub
+                - arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:identity/${identityName}
+                - { identityName: !Ref IdentityName}
       Environment:
         Variables:
           EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code
@@ -851,7 +869,9 @@ Resources:
         ContentUri: functions/validation/
         CompatibleRuntimes:
           - nodejs12.x
-
+  ############ SES Identity Name #################
+  IdentityName:
+    Type: AWS::SES::ConfigurationSet
   ############ S3 Buckets ##################
   EvaluationsExportS3Bucket:
     Type: AWS::S3::Bucket

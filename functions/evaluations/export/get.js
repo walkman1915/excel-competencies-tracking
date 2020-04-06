@@ -158,14 +158,49 @@ exports.lambdaHandler = async (event, context) => {
         await putObjectToS3(csv, path);
 
         console.log("Successful upload!");
+        
+        let emailAddress = 'xavier17victor@gmail.com';
+        
+        console.log("Reached sendEmail section");
+    
+        let newFileData = await getS3File(EXPORT_EVALUATION_BUCKET, path);
 
+        console.log("New file data retrieved");
 
+        let mailOptions = {
+            from: emailAddress,
+            subject: 'This is an email sent from a Lambda function!',
+            html: `<p>You got a contact message from: someone </b></p>`,
+            to: emailAddress,
+            // bcc: Any BCC address you want here in an array,
+            attachments: [
+                {
+                    filename: "An export of Excel Program evaluations",
+                    content: newFileData.Body
+                }
+            ]
+        };
         
         
-        
-        var emailAddress = 'xavier17victor@gmail.com';
-        
-        sendEmail(EXPORT_EVALUATION_BUCKET, path,emailAddress);
+        console.log('Creating SES transporter');
+        // create Nodemailer SES transporter
+        var transporter = nodemailer.createTransport({
+            SES: new AWS.SES({ apiVersion: '2010-12-01' })
+        });
+
+        // send email
+        console.log('Attempting to send email');
+
+        transporter.sendMail(mailOptions, function (err, info) {
+            if (err) {
+                console.log(err);
+                console.log('Error sending email');
+                
+            } else {
+                console.log('Email sent successfully');
+                
+            }
+        });
         
         console.log("Currently Past Mail Section");
 
@@ -259,49 +294,4 @@ function getS3File(bucket, key) {
             }
         );
     })
-}
-
-function sendEmail(bucketName, fileName, emailAddress) {
-    
-    getS3File(bucketName, fileName)
-        .then(function (fileData) {
-    
-            var mailOptions = {
-                from: emailAddress,
-                subject: 'This is an email sent from a Lambda function!',
-                html: `<p>You got a contact message from: someone </b></p>`,
-                to: emailAddress,
-                // bcc: Any BCC address you want here in an array,
-                attachments: [
-                    {
-                        filename: "An export of Excel Program evaluations",
-                        content: fileData.Body
-                    }
-                ]
-            };
-        
-            console.log('Creating SES transporter');
-            // create Nodemailer SES transporter
-            var transporter = nodemailer.createTransport({
-                SES: new AWS.SES({ apiVersion: "2020-04-03" })
-            });
-
-            // send email
-            console.log('Attempting to send email');
-            transporter.sendMail(mailOptions, function (err, info) {
-                if (err) {
-                    console.log(err);
-                    console.log('Error sending email');
-                    
-                } else {
-                    console.log('Email sent successfully');
-                    
-                }
-            });
-        })
-        .catch(function (error) {
-            console.log(error);
-            console.log('Error getting attachment from S3');
-            
-        });
 }
