@@ -166,6 +166,8 @@ exports.lambdaHandler = async (event, context) => {
         let newFileData = await getS3File(EXPORT_EVALUATION_BUCKET, path);
 
         console.log("New file data retrieved");
+        console.log(newFileData.Body);
+        
 
         let mailOptions = {
             from: emailAddress,
@@ -181,6 +183,7 @@ exports.lambdaHandler = async (event, context) => {
             ]
         };
         
+
         
         console.log('Creating SES transporter');
         // create Nodemailer SES transporter
