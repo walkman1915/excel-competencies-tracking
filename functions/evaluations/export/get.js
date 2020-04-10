@@ -3,10 +3,6 @@ let response;
 // edit this if we want to change where CSV uploads go
 const PATH_TO_FILE_IN_BUCKET = "export/";
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 059e8e0f28d328e689d8e03fab3382140474d96c
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const s3 = new AWS.S3();
@@ -165,7 +161,6 @@ exports.lambdaHandler = async (event, context) => {
 
         let evaluationsData = await getS3File(path);
         console.log("START EMAIL SECTION");
-<<<<<<< HEAD
 
         /*
         const mail = mailcomposer({
@@ -180,8 +175,6 @@ exports.lambdaHandler = async (event, context) => {
             ],
         });
         */
-=======
->>>>>>> 059e8e0f28d328e689d8e03fab3382140474d96c
         var emailParams = {
             Destination: {
                 ToAddresses: [
