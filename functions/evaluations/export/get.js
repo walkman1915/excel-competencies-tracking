@@ -147,7 +147,7 @@ exports.lambdaHandler = async (event, context) => {
         let path2 = path;
 
         // create another variable for just the file name, may be deleted later
-        let filename = readable + ".csv";
+        let evaluationsFileName = readable + ".csv";
 
         // for debug
         console.log(path);
@@ -270,7 +270,7 @@ exports.lambdaHandler = async (event, context) => {
 
 
         //Build and send the email
-        mail.build(function (err, message){
+        mail.compile().build(function (err, message){
             ses.sendRawEmail({RawMessage: {Data: message}}, function (err, data) {
                 if (err) {
                     console.log(err, err.stack);
