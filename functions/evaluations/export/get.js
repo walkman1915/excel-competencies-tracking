@@ -1,20 +1,17 @@
 let response;
-
 // edit this if we want to change where CSV uploads go
 const PATH_TO_FILE_IN_BUCKET = "export/";
+
 
 const AWS = require('aws-sdk');
 const ddb = new AWS.DynamoDB.DocumentClient();
 const s3 = new AWS.S3();
+const ses = new AWS.SES({region: 'us-east-1'});
 const EVALUATIONS_DDB_TABLE_NAME = process.env.EVALUATIONS_DDB_TABLE_NAME; // Allows us to access the environment variables defined in the Cloudformation template
 const COMPETENCIES_DDB_TABLE_NAME = process.env.COMPETENCIES_DDB_TABLE_NAME;
 const USERS_DDB_TABLE_NAME = process.env.USERS_DDB_TABLE_NAME;
 const TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME = process.env.TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME;
 const EXPORT_EVALUATION_BUCKET = process.env.EXPORT_EVALUATION_BUCKET;
-
-//Added by Maxwell for Simple Email Services
-var nodemailer = require('nodemailer');
-var ses = new AWS.SES();
 
 /**
  *
@@ -87,7 +84,7 @@ exports.lambdaHandler = async (event, context) => {
                 let studentUser = (await getSpecificUser(userIdBeingEvaluated));
                 if (!isEmptyObject((studentUser))) {
                     studentUser = studentUser.Item;
-                    //studentUserName = studentUser.hasOwnProperty("UserInfo") ? studentUser.UserInfo["name"] : "";
+                    studentUserName = studentUser.hasOwnProperty("UserInfo") ? studentUser.UserInfo["name"] : "";
                     studentUserName = studentUser.hasOwnProperty("UserInfo") ? studentUser.UserInfo : "";
                     studentUserCohort = studentUser.hasOwnProperty("Cohort") ? studentUser.Cohort : "";
                 }
@@ -99,7 +96,7 @@ exports.lambdaHandler = async (event, context) => {
                 let evaluator = (await getSpecificUser(currentEval.UserIdEvaluator));
                 if (!isEmptyObject((evaluator))) {
                     evaluator = evaluator.Item;
-                    //evaluatorName = evaluator.hasOwnProperty("UserInfo") ? evaluator.UserInfo["name"] : "";
+                    evaluatorName = evaluator.hasOwnProperty("UserInfo") ? evaluator.UserInfo["name"] : "";
                     evaluatorName = evaluator.hasOwnProperty("UserInfo") ? evaluator.UserInfo : "";
                     evaluatorRole = evaluator.hasOwnProperty("Role") ? evaluator.Role : "";
                 }
@@ -138,16 +135,17 @@ exports.lambdaHandler = async (event, context) => {
         }
 
         console.log(csv);
-        
+
         // get a new date in a human readable format
         let timestamp = new Date();
 
         // prepend "Evaluations through " to readable name
         let readable = "Evaluations through " + timestamp;
-        
+
         // create the full path, also can be used later to retrieve the file from the bucket
         let path = PATH_TO_FILE_IN_BUCKET + readable + ".csv";
-        
+        let path2 = path;
+
         // create another variable for just the file name, may be deleted later
         let filename = readable + ".csv";
 
@@ -158,57 +156,140 @@ exports.lambdaHandler = async (event, context) => {
         await putObjectToS3(csv, path);
 
         console.log("Successful upload!");
-        
-        let emailAddress = 'xavier17victor@gmail.com';
-        
-        console.log("Reached sendEmail section");
-    
-        let newFileData = await getS3File(EXPORT_EVALUATION_BUCKET, path);
 
-        console.log("New file data retrieved");
-        console.log(newFileData.Body);
-        
+        var emailAddress = "xavier17victor@gmail.com";
 
-        let mailOptions = {
-            from: emailAddress,
-            subject: 'This is an email sent from a Lambda function!',
-            html: `<p>You got a contact message from: someone </b></p>`,
-            to: emailAddress,
-            // bcc: Any BCC address you want here in an array,
+        let evaluationsData = await getS3File(path);
+        console.log("START EMAIL SECTION");
+
+        /*
+        const mail = mailcomposer({
+            from: 'xavier17victor@gmail.com',
+            to: 'xavier17victor@gmail.com',
+            subject: 'Test Files',
+            text: 'Hey folks, this is a test message from SES with an attachment.',
             attachments: [
                 {
-                    filename: "An export of Excel Program evaluations",
-                    content: newFileData.Body
+                    path: path2
+                },
+            ],
+        });
+        */
+        var emailParams = {
+            Destination: {
+                ToAddresses: [
+                    'xavier17victor@gmail.com'
+                ]
+            },
+            Message: {
+                Body: {
+                    Html: {
+                        Charset: "UTF-8",
+                        Data: "This message body contains HTML formatting. It can, for example, contain links like this one: <a class=\"ulink\" href=\"http://docs.aws.amazon.com/ses/latest/DeveloperGuide\" target=\"_blank\">Amazon SES Developer Guide</a>."
+                    },
+                    Text: {
+                        Charset: "UTF-8",
+                        Data: "This is the message body in text format."
+                    }
+                },
+                Subject: {
+                    Charset: "UTF-8",
+                    Data: "Test email"
                 }
-            ]
+            },
+            Source: "xavier17victor@gmail.com"
         };
         
+        /*
+        From: "Sender Name" <sender@example.com>
+        To: recipient@example.com
+        Subject: Customer service contact info
+        Content-Type: multipart/mixed;
+            boundary="a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a"
 
-        
-        console.log('Creating SES transporter');
-        // create Nodemailer SES transporter
-        var transporter = nodemailer.createTransport({
-            SES: new AWS.SES({ apiVersion: '2010-12-01' })
+        --a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a
+        Content-Type: multipart/alternative;
+            boundary="sub_a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a"
+
+        --sub_a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a
+        Content-Type: text/plain; charset=iso-8859-1
+        Content-Transfer-Encoding: quoted-printable
+
+        Please see the attached file for a list of customers to contact.
+
+        --sub_a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a
+        Content-Type: text/html; charset=iso-8859-1
+        Content-Transfer-Encoding: quoted-printable
+
+        <html>
+        <head></head>
+        <body>
+        <h1>Hello!</h1>
+        <p>Please see the attached file for a list of customers to contact.</p>
+        </body>
+        </html>
+
+        --sub_a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a--
+
+        --a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a
+        Content-Type: text/csv; name="DummyData.csv"
+        Content-Description: DummyData.csv
+        Content-Disposition: attachment;filename="DummyData.csv";
+            creation-date= timestamp;
+        Content-Transfer-Encoding: base64
+
+        SUQsRmlyc3ROYW1lLExhc3ROYW1lLENvdW50cnkKMzQ4LEpvaG4sU3RpbGVzLENhbmFkYQo5MjM4
+        OSxKaWUsTGl1LENoaW5hCjczNCxTaGlybGV5LFJvZHJpZ3VleixVbml0ZWQgU3RhdGVzCjI4OTMs
+        QW5heWEsSXllbmdhcixJbmRpYQ==
+
+        --a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a--
+
+*/
+        console.log("ABOUT TO SEND");
+
+        await ses.sendEmail(emailParams).promise();
+
+        //Trying with MailComposer
+        var MailComposer = require("mailcomposer").MailComposer;
+        //mailcomposer = new MailComposer(),
+        fs = require("fs");
+
+        //Create the email
+        const mail = MailComposer({
+            from: emailAddress,
+            to: emailAddress,
+            subject: 'Sample SES message with attachment',
+            text: 'Hey folks, this is a test message from SES with an attachment.',
+            attachments: [
+                {
+                fileName: evaluationsFileName,
+                content: evaluationsData,
+                },
+            ]
         });
 
-        // send email
-        console.log('Attempting to send email');
 
-        transporter.sendMail(mailOptions, function (err, info) {
-            if (err) {
-                console.log(err);
-                console.log('Error sending email');
-                
-            } else {
-                console.log('Email sent successfully');
-                
-            }
+        //Build and send the email
+        mail.build(function (err, message){
+            ses.sendRawEmail({RawMessage: {Data: message}}, function (err, data) {
+                if (err) {
+                    console.log(err, err.stack);
+                    context.fail('Internal Error: The email could not be sent.');
+                } else {
+                    console.log(message);
+                    context.succeed('The email was successfully sent');
+                }
+            }); 
         });
+
+
+
+
         
         console.log("Currently Past Mail Section");
 
         //Construct the response
-        // maybe change this to just be "Success!"? 
+        // maybe change this to just be "Success!"?
         response = {
             statusCode: 200,
             body: JSON.stringify(respBody),
@@ -284,17 +365,10 @@ function isEmptyObject(obj) {
     return true;
 }
 
-function getS3File(bucket, key) {
-    return new Promise(function (resolve, reject) {
-        s3.getObject(
-            {
-                Bucket: bucket,
-                Key: key
-            },
-            function (err, data) {
-                if (err) return reject(err);
-                else return resolve(data);
-            }
-        );
-    })
+function getS3File(key) {
+    var params = {
+        Bucket : EXPORT_EVALUATION_BUCKET,
+        Key: key,
+    };
+    return s3.getObject(params).promise();
 }
