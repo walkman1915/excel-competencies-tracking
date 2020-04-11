@@ -119,7 +119,7 @@ exports.lambdaHandler = async (event, context) => {
             statusCode: 201,
             body: JSON.stringify(tracking_location),
             headers: {
-                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Origin': '*'
             },
         }
     } catch (err) {

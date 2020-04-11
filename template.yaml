@@ -497,7 +497,7 @@ Resources:
   AddTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking-location-to-competencies/
+      CodeUri: functions/tracking-location-to-competencies
       Handler: post.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
@@ -531,7 +531,7 @@ Resources:
   DeleteTrackingLocationToCompetenciesFunction: 
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking-location-to-competencies//{locationId}
+      CodeUri: functions/tracking-location-to-competencies/{locationId}
       Handler: delete.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
@@ -594,7 +594,7 @@ Resources:
   GetAllTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking-location-to-competencies/
+      CodeUri: functions/tracking-location-to-competencies
       Handler: get.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
@@ -604,7 +604,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ExcelApi
-            Path: /tracking-locations-to-competencies/
+            Path: /tracking-locations-to-competencies
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -1140,6 +1140,10 @@ Resources:
         Authorizers:
           MyCognitoAuthorizer:
             UserPoolArn: !GetAtt CognitoUserPool.Arn
+      Cors:
+        AllowMethods: "'*'"
+        AllowHeaders: "'*'"
+        AllowOrigin: "'*'"
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
@@ -1187,6 +1191,7 @@ Resources:
       AllowedOAuthFlows: # TODO: can we scope this back?
         - code
         - implicit
+      AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthScopes: # TODO: can we scope this back?
         - phone
         - email
