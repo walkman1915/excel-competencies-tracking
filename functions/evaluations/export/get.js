@@ -146,7 +146,7 @@ exports.lambdaHandler = async (event, context) => {
 
         // create the full path, also can be used later to retrieve the file from the bucket
         let path = PATH_TO_FILE_IN_BUCKET + readable + ".csv";
-        let path2 = path;
+        let path2 = "https://s3.console.aws.amazon.com/s3/object/" + path;
 
         // create another variable for just the file name, may be deleted later
         let evaluationsFileName = readable + ".csv";
@@ -166,34 +166,7 @@ exports.lambdaHandler = async (event, context) => {
         console.log("START EMAIL SECTION");
 
         
-        var emailParams = {
-            Destination: {
-                ToAddresses: [
-                    'xavier17victor@gmail.com'
-                ]
-            },
-            Message: {
-                Body: {
-                    Html: {
-                        Charset: "UTF-8",
-                        Data: "This message body contains HTML formatting. It can, for example, contain links like this one: <a class=\"ulink\" href=\"http://docs.aws.amazon.com/ses/latest/DeveloperGuide\" target=\"_blank\">Amazon SES Developer Guide</a>."
-                    },
-                    Text: {
-                        Charset: "UTF-8",
-                        Data: "This is the message body in text format."
-                    }
-                },
-                Subject: {
-                    Charset: "UTF-8",
-                    Data: "Test email"
-                }
-            },
-            Source: "xavier17victor@gmail.com"
-        };
         
-        console.log("ABOUT TO SEND");
-
-        await ses.sendEmail(emailParams).promise();
         
         const nodemailer = require("nodemailer");
 
@@ -230,14 +203,41 @@ exports.lambdaHandler = async (event, context) => {
             }
         ]
         });
-        
         console.log("Message sent: %s", info.messageId);
         // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
         
         // Preview only available when sending through an Ethereal account
         console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
         // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+    
+        var emailParams = {
+            Destination: {
+                ToAddresses: [
+                    'xavier17victor@gmail.com'
+                ]
+            },
+            Message: {
+                Body: {
+                    Html: {
+                        Charset: "UTF-8",
+                        Data: "The following link sends you to an email service that hosts the evaluations file you requested: " +  nodemailer.getTestMessageUrl(info),
+                    },
+                    Text: {
+                        Charset: "UTF-8",
+                        Data: "This is the message body in text format."
+                    }
+                },
+                Subject: {
+                    Charset: "UTF-8",
+                    Data: "Test email"
+                }
+            },
+            Source: "xavier17victor@gmail.com"
+        };
+        
+        console.log("ABOUT TO SEND");
 
+        await ses.sendEmail(emailParams).promise();
         
         
         console.log("Currently Past Mail Section");
