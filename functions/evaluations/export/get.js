@@ -4,6 +4,8 @@ let response;
 const PATH_TO_FILE_IN_BUCKET = "export/";
 
 const AWS = require('aws-sdk');
+var fs = require("fs");
+var csv = require("csv");
 const ddb = new AWS.DynamoDB.DocumentClient();
 const s3 = new AWS.S3();
 const ses = new AWS.SES({region: 'us-east-1'});
@@ -160,21 +162,10 @@ exports.lambdaHandler = async (event, context) => {
         var emailAddress = "xavier17victor@gmail.com";
 
         let evaluationsData = await getS3File(path);
+        
         console.log("START EMAIL SECTION");
 
-        /*
-        const mail = mailcomposer({
-            from: 'xavier17victor@gmail.com',
-            to: 'xavier17victor@gmail.com',
-            subject: 'Test Files',
-            text: 'Hey folks, this is a test message from SES with an attachment.',
-            attachments: [
-                {
-                    path: path2
-                },
-            ],
-        });
-        */
+        
         var emailParams = {
             Destination: {
                 ToAddresses: [
@@ -200,91 +191,54 @@ exports.lambdaHandler = async (event, context) => {
             Source: "xavier17victor@gmail.com"
         };
         
-        /*
-        From: "Sender Name" <sender@example.com>
-        To: recipient@example.com
-        Subject: Customer service contact info
-        Content-Type: multipart/mixed;
-            boundary="a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a"
-
-        --a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a
-        Content-Type: multipart/alternative;
-            boundary="sub_a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a"
-
-        --sub_a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a
-        Content-Type: text/plain; charset=iso-8859-1
-        Content-Transfer-Encoding: quoted-printable
-
-        Please see the attached file for a list of customers to contact.
-
-        --sub_a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a
-        Content-Type: text/html; charset=iso-8859-1
-        Content-Transfer-Encoding: quoted-printable
-
-        <html>
-        <head></head>
-        <body>
-        <h1>Hello!</h1>
-        <p>Please see the attached file for a list of customers to contact.</p>
-        </body>
-        </html>
-
-        --sub_a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a--
-
-        --a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a
-        Content-Type: text/csv; name="DummyData.csv"
-        Content-Description: DummyData.csv
-        Content-Disposition: attachment;filename="DummyData.csv";
-            creation-date= timestamp;
-        Content-Transfer-Encoding: base64
-
-        SUQsRmlyc3ROYW1lLExhc3ROYW1lLENvdW50cnkKMzQ4LEpvaG4sU3RpbGVzLENhbmFkYQo5MjM4
-        OSxKaWUsTGl1LENoaW5hCjczNCxTaGlybGV5LFJvZHJpZ3VleixVbml0ZWQgU3RhdGVzCjI4OTMs
-        QW5heWEsSXllbmdhcixJbmRpYQ==
-
-        --a3f166a86b56ff6c37755292d690675717ea3cd9de81228ec2b76ed4a15d6d1a--
-
-*/
         console.log("ABOUT TO SEND");
 
         await ses.sendEmail(emailParams).promise();
+        
+        const nodemailer = require("nodemailer");
 
-        //Trying with MailComposer
-        var MailComposer = require("mailcomposer").MailComposer;
-        //mailcomposer = new MailComposer(),
-        fs = require("fs");
+        console.log("Email without attachment sent. Moving on to nodemailer")
+        
+        // Generate test SMTP service account from ethereal.email
+        // Only needed if you don't have a real mail account for testing
+        let testAccount = await nodemailer.createTestAccount();
 
-        //Create the email
-        const mail = MailComposer({
-            from: emailAddress,
-            to: emailAddress,
-            subject: 'Sample SES message with attachment',
-            text: 'Hey folks, this is a test message from SES with an attachment.',
-            attachments: [
-                {
-                fileName: evaluationsFileName,
-                content: evaluationsData,
-                },
-            ]
+        // create reusable transporter object using the default SMTP transport
+        let transporter = nodemailer.createTransport({
+        host: "smtp.ethereal.email",
+        port: 587,
+        secure: false, // true for 465, false for other ports
+        auth: {
+            user: testAccount.user, // generated ethereal user
+            pass: testAccount.pass // generated ethereal password
+            }
         });
 
-
-        //Build and send the email
-        mail.compile().build(function (err, message){
-            ses.sendRawEmail({RawMessage: {Data: message}}, function (err, data) {
-                if (err) {
-                    console.log(err, err.stack);
-                    context.fail('Internal Error: The email could not be sent.');
-                } else {
-                    console.log(message);
-                    context.succeed('The email was successfully sent');
-                }
-            }); 
+        // send mail with defined transport object
+        let info = await transporter.sendMail({
+        from: 'xavier17victor@gmail.com', // sender address
+        to: 'xavier17victor@gmail.com', // list of receivers
+        subject: "Hello ✔", // Subject line
+        text: "Hello world?", // plain text body
+        html: "<b>Hello world?</b>", // html body
+        attachments: [
+            {
+              filename: 'evaluations.csv',
+              path: path2
+              /*content: Buffer.from(evaluationsData, 'base64'),
+              contentType: 'text/csv' */
+            }
+        ]
         });
+        
+        console.log("Message sent: %s", info.messageId);
+        // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@example.com>
+        
+        // Preview only available when sending through an Ethereal account
+        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+        // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
 
-
-
-
+        
         
         console.log("Currently Past Mail Section");
 
