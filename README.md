@@ -53,7 +53,7 @@ _The following data parameters describe the sort information contained in an Eva
 
 - __EvaluationScore__: (String, Required)  The numeric score that user received in the evalutation. View [Evaluation Score Table]() for a list of qualitative and competency speficic descriptions of these scores.
 
-- __Comments__: (String, Optional)  Additional comments made by evaluator.
+- __Comments__: (String, Required)  Additional comments made by evaluator.
 
 - __Evidence__: (String, Required) The mode of data that led to the evaluation. 
 
@@ -71,6 +71,7 @@ You can add an evaluation by sending a POST request to the following address: <e
    "Day": "28",
    "UserIdEvaluator": "asmith",
    "EvaluationScore": "3",
+   "Comments": "This is a wonderful comment",
    "Evidence": "Assessment",
    "Approved": "False”
 }
@@ -85,7 +86,7 @@ Once a request has been recieved it will give back __Status Code 201__, input th
    "Day": "28",
    "UserIdEvaluator": "asmith",
    "EvaluationScore": "3",
-   "Comments": "",
+   "Comments": "This is a wonderful comment",
    "Evidence": "Assessment",
    "Approved": "False”
 }
