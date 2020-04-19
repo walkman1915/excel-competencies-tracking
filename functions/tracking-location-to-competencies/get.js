@@ -44,7 +44,7 @@ exports.lambdaHandler = async (event, context) => {
         // Generate the response body for a successful get
         
         let respBody = {};
-        respBody.Items = allEvals.Items; //Gets the actual items from the call
+        respBody.Items = allTrackingLocations.Items; //Gets the actual items from the call
 
         //Construct the response
         response = {
