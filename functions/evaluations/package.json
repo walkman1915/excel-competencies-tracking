@@ -9,7 +9,8 @@
   "dependencies": {
     "axios": "^0.18.0",
     "fs": "0.0.1-security",
-    "mailcomposer": "^4.0.2"
+    "mailcomposer": "^4.0.2",
+    "to-csv": "github:jwerle/to-csv"
   },
   "scripts": {
     "test": "mocha tests/unit/"

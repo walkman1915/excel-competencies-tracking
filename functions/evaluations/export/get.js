@@ -137,7 +137,7 @@ exports.lambdaHandler = async (event, context) => {
         }
 
         console.log(csv);
-
+        csvFile = csv;
         // get a new date in a human readable format
         let timestamp = new Date();
 
@@ -159,17 +159,16 @@ exports.lambdaHandler = async (event, context) => {
 
         console.log("Successful upload!");
 
-        var emailAddress = "xavier17victor@gmail.com";
+        /* Unused email section below:
+
+        var emailAddress = "";
 
         let evaluationsData = await getS3File(path);
         
         console.log("START EMAIL SECTION");
 
-        
-        
-        
         const nodemailer = require("nodemailer");
-
+        let toCsv = require('to-csv');
         console.log("Email without attachment sent. Moving on to nodemailer")
         
         // Generate test SMTP service account from ethereal.email
@@ -189,17 +188,14 @@ exports.lambdaHandler = async (event, context) => {
 
         // send mail with defined transport object
         let info = await transporter.sendMail({
-        from: 'xavier17victor@gmail.com', // sender address
-        to: 'xavier17victor@gmail.com', // list of receivers
+        from: '', // sender address
+        to: '', // list of receivers
         subject: "Hello ✔", // Subject line
         text: "Hello world?", // plain text body
         html: "<b>Hello world?</b>", // html body
         attachments: [
             {
-              filename: 'evaluations.csv',
-              path: path2
-              /*content: Buffer.from(evaluationsData, 'base64'),
-              contentType: 'text/csv' */
+              filename: 'evaluations.csv'
             }
         ]
         });
@@ -213,7 +209,7 @@ exports.lambdaHandler = async (event, context) => {
         var emailParams = {
             Destination: {
                 ToAddresses: [
-                    'xavier17victor@gmail.com'
+                    ''
                 ]
             },
             Message: {
@@ -232,16 +228,16 @@ exports.lambdaHandler = async (event, context) => {
                     Data: "Test email"
                 }
             },
-            Source: "xavier17victor@gmail.com"
+            Source: ""
         };
         
         console.log("ABOUT TO SEND");
 
         await ses.sendEmail(emailParams).promise();
         
-        
         console.log("Currently Past Mail Section");
-
+        */
+       
         //Construct the response
         // maybe change this to just be "Success!"?
         response = {
