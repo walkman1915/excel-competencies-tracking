@@ -48,7 +48,7 @@ exports.lambdaHandler = async (event, context) => {
 
         for (let i = 0; i < allEvals.Items.length; i++) {
             let currentEval = allEvals.Items[i];
-            let location = "WHERE IS THIS STORED?";
+            let location = "";
             // Data not requiring table look ups
             let transactionId = (currentEval.hasOwnProperty("CompetencyId_Timestamp"))
                 ? currentEval.CompetencyId_Timestamp : "";
