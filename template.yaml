@@ -19,6 +19,7 @@ Parameters:
     Type: String
     Default: excel-tracking-user-pool-client
 Resources:
+
   ############ Lambda Functions ############
   PostAuthenticationFunction:
     Type: AWS::Serverless::Function
@@ -77,6 +78,83 @@ Resources:
       Environment:
         Variables:
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable # Allows us to access the var "USERS_DDB_TABLE_NAME" in this lambda's javascript code 
+  ExportEvaluationsFunction:
+    Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: functions/evaluations/export
+      Handler: get.lambdaHandler
+      Runtime: nodejs12.x
+      Events:
+        GetEvaluations:
+          Type: Api
+          Properties:
+            Path: /evaluations/export
+            Method: get
+            RestApiId: !Ref ExcelApi
+      Policies: # Lists permissions; what is this lambda allowed to do/interact with?
+        - Statement:
+            - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Scan
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref EvaluationsDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref EvaluationsDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref CompetenciesMasterDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref CompetenciesMasterDDBTable}
+            - Sid: S3WritePolicy
+              Effect: Allow
+              Action:
+                - s3:PutObject
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:s3:::${bucketName}/*
+                  - { bucketName: !Ref EvaluationsExportS3Bucket}
+            - Sid: S3ReadPolicy
+              Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:s3:::${bucketName}/*
+                  - { bucketName: !Ref EvaluationsExportS3Bucket}
+            - Sid: SESCrudPolicy
+              Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+                - ses:GetIdentityVerificationAttributes
+                - ses:VerifyEmailIdentity
+              Resource: "*"
+
+      Environment:
+        Variables:
+          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code
+          USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
+          TRACKING_LOCATIONS_TO_COMPETENCIES_DDB_TABLE_NAME: !Ref TrackingLocationToCompetenciesDDBTable
+          COMPETENCIES_DDB_TABLE_NAME: !Ref CompetenciesMasterDDBTable
+          EXPORT_EVALUATION_BUCKET: !Ref EvaluationsExportS3Bucket
   AddUserFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -95,17 +173,17 @@ Resources:
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:PutItem
-            Resource:
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref UsersDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref UsersDDBTable}
+            - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:PutItem
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersDDBTable}
       Environment:
         Variables:
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable # Allows us to access the var "USERS_DDB_TABLE_NAME" in this lambda's javascript code
@@ -127,24 +205,24 @@ Resources:
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:PutItem
-            Resource:
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref EvaluationsDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref EvaluationsDDBTable}
+            - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:PutItem
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref EvaluationsDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref EvaluationsDDBTable}
       Environment:
         Variables:
-          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code  
+          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code
   DeleteEvaluationFunction: #Function for deleting a specific evaluation from the table
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/evaluations/{userId}/{compId}/{timeStamp}  
+      CodeUri: functions/evaluations/{userId}/{compId}/{timeStamp}
       Handler: delete.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
@@ -158,21 +236,21 @@ Resources:
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBDeletePolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:DeleteItem
-              - dynamodb:GetItem
-            Resource:
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref EvaluationsDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref EvaluationsDDBTable}
+            - Sid: DynamoDBDeletePolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+                - dynamodb:GetItem
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref EvaluationsDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref EvaluationsDDBTable}
       Environment:
         Variables:
-          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code  
+          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code
   GetEvaluationsFunction: #Function for getting all of the evaluations in the table
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -190,21 +268,21 @@ Resources:
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:GetItem
-              - dynamodb:Scan
-            Resource:
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref EvaluationsDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref EvaluationsDDBTable}
+            - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Scan
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref EvaluationsDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref EvaluationsDDBTable}
       Environment:
         Variables:
-          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code  
+          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code
   GetEvaluationsForUserFunction: # Function for getting all of the evaluations for a specific student
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -222,21 +300,21 @@ Resources:
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:GetItem
-              - dynamodb:Scan
-            Resource:
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref EvaluationsDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref EvaluationsDDBTable}
+            - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Scan
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref EvaluationsDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref EvaluationsDDBTable}
       Environment:
         Variables:
-          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code  
+          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code
   GetEvaluationsForUserAndCompFunction: # Function for getting all of the evaluations for a specific student for a specific competency
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -254,21 +332,21 @@ Resources:
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:GetItem
-              - dynamodb:Scan
-            Resource:
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref EvaluationsDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref EvaluationsDDBTable}
+            - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Scan
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref EvaluationsDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref EvaluationsDDBTable}
       Environment:
         Variables:
-          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code  
+          EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code
   GetSpecificEvaluationFunction: # Function for getting a specific evaluation matching a user id, comp id, and timestamp
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -286,18 +364,18 @@ Resources:
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:GetItem
-              - dynamodb:Scan
-            Resource:
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref EvaluationsDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref EvaluationsDDBTable}
+            - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Scan
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref EvaluationsDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref EvaluationsDDBTable}
       Environment:
         Variables:
           EVALUATIONS_DDB_TABLE_NAME: !Ref EvaluationsDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code
@@ -318,18 +396,18 @@ Resources:
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:GetItem
-              - dynamodb:Scan
-            Resource:
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref EvaluationScaleDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref EvaluationScaleDDBTable}
+            - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Scan
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref EvaluationScaleDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref EvaluationScaleDDBTable}
       Environment:
         Variables:
           EVALUATION_SCALE_DDB_TABLE_NAME: !Ref EvaluationScaleDDBTable # Allows us to access the var "EVALUATION_SCALE_DDB_TABLE_NAME" in this lambda's javascript code
@@ -351,17 +429,17 @@ Resources:
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:PutItem
-            Resource:
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref EvaluationScaleDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref EvaluationScaleDDBTable}
+            - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:PutItem
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref EvaluationScaleDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref EvaluationScaleDDBTable}
       Environment:
         Variables:
           EVALUATION_SCALE_DDB_TABLE_NAME: !Ref EvaluationScaleDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code
@@ -382,19 +460,19 @@ Resources:
             Method: get # Which HTTP method (get, post, delete, etc.) should will invoke this lambda when an API call is made at this path?
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBGetAndScanPolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:GetItem
-              - dynamodb:Scan
-            # Add resources for DeleteComp
-            Resource:
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref CompetenciesMasterDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref CompetenciesMasterDDBTable}
+            - Sid: DynamoDBGetAndScanPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Scan
+              # Add resources for DeleteComp
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref CompetenciesMasterDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref CompetenciesMasterDDBTable}
       Environment:
         Variables:
           COMPETENCIES_DDB_TABLE_NAME: !Ref CompetenciesMasterDDBTable
@@ -415,19 +493,19 @@ Resources:
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBDeleteAndGetPolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:DeleteItem
-              - dynamodb:GetItem
-            # Add resources for DeleteComp
-            Resource:
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref CompetenciesMasterDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref CompetenciesMasterDDBTable}
+            - Sid: DynamoDBDeleteAndGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+                - dynamodb:GetItem
+              # Add resources for DeleteComp
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref CompetenciesMasterDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref CompetenciesMasterDDBTable}
       Environment:
         Variables:
           COMPETENCIES_DDB_TABLE_NAME: !Ref CompetenciesMasterDDBTable
@@ -448,20 +526,20 @@ Resources:
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:GetItem
-            Resource:
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref CompetenciesMasterDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref CompetenciesMasterDDBTable}
+            - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref CompetenciesMasterDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref CompetenciesMasterDDBTable}
       Environment:
         Variables:
-          COMPETENCIES_DDB_TABLE_NAME: !Ref CompetenciesMasterDDBTable 
+          COMPETENCIES_DDB_TABLE_NAME: !Ref CompetenciesMasterDDBTable
   AddCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -480,24 +558,24 @@ Resources:
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:PutItem
-            Resource:
-              - !Sub
+            - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:PutItem
+              Resource:
+                - !Sub
                   - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
                   - { tableName: !Ref CompetenciesMasterDDBTable}
-              - !Sub
+                - !Sub
                   - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
                   - { tableName: !Ref CompetenciesMasterDDBTable}
       Environment:
         Variables:
-          COMPETENCIES_DDB_TABLE_NAME: !Ref CompetenciesMasterDDBTable 
+          COMPETENCIES_DDB_TABLE_NAME: !Ref CompetenciesMasterDDBTable
   AddTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking-location-to-competencies/
+      CodeUri: functions/tracking-location-to-competencies
       Handler: post.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
@@ -512,26 +590,26 @@ Resources:
             Method: post
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:PutItem
-              - dynamodb:Scan
-              - dynamodb:GetItem
-            Resource: # this should stay!
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
+            - Sid: DynamoDBPutPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:Scan
+                - dynamodb:GetItem
+              Resource: # this should stay!
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
       Environment:
         Variables:
           TRACKING_LOCATIONS_TO_COMPETENCIES_DDB: !Ref TrackingLocationToCompetenciesDDBTable # Allows us to access the var in this lambda's javascript code
-  DeleteTrackingLocationToCompetenciesFunction: 
+  DeleteTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking-location-to-competencies//{locationId}
+      CodeUri: functions/tracking-location-to-competencies/{locationId}
       Handler: delete.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
@@ -545,21 +623,21 @@ Resources:
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBDeletePolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:DeleteItem
-              - dynamodb:GetItem
-            Resource: # this should stay too!
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
+            - Sid: DynamoDBDeletePolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+                - dynamodb:GetItem
+              Resource: # this should stay too!
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
       Environment:
         Variables:
-          TRACKING_LOCATIONS_TO_COMPETENCIES_DDB: !Ref TrackingLocationToCompetenciesDDBTable # Allows us to access the var in this lambda's javascript code  
+          TRACKING_LOCATIONS_TO_COMPETENCIES_DDB: !Ref TrackingLocationToCompetenciesDDBTable # Allows us to access the var in this lambda's javascript code
   GetSpecificTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -594,7 +672,7 @@ Resources:
   GetAllTrackingLocationToCompetenciesFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: functions/tracking-location-to-competencies/
+      CodeUri: functions/tracking-location-to-competencies
       Handler: get.lambdaHandler
       Layers:
         - !Ref AuthenticationLayer
@@ -604,7 +682,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ExcelApi
-            Path: /tracking-locations-to-competencies/
+            Path: /tracking-locations-to-competencies
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
@@ -622,7 +700,7 @@ Resources:
                 - { tableName: !Ref TrackingLocationToCompetenciesDDBTable}
       Environment:
         Variables:
-          TRACKING_LOCATIONS_TO_COMPETENCIES_DDB: !Ref TrackingLocationToCompetenciesDDBTable 
+          TRACKING_LOCATIONS_TO_COMPETENCIES_DDB: !Ref TrackingLocationToCompetenciesDDBTable
   GetSpecificUserFunction:
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -640,17 +718,17 @@ Resources:
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBGetPolicy
-            Effect: Allow
-            Action:
-              - dynamodb:GetItem
-            Resource:
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref UsersDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref UsersDDBTable}
+            - Sid: DynamoDBGetPolicy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersDDBTable}
       Environment:
         Variables:
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
@@ -712,27 +790,27 @@ Resources:
             Method: get
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:GetItem
-              - dynamodb:Scan
-            Resource:
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref UsersToTrackingLocationDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref UsersToTrackingLocationDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref UsersDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref UsersDDBTable}
+            - Sid: DynamoDBGetPolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:Scan
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersToTrackingLocationDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersToTrackingLocationDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersDDBTable}
       Environment:
         Variables:
-          USERS_TO_TRACKING_LOCATION_DDB_TABLE_NAME: !Ref UsersToTrackingLocationDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code          
+          USERS_TO_TRACKING_LOCATION_DDB_TABLE_NAME: !Ref UsersToTrackingLocationDDBTable # Allows us to access the var "EVALUATIONS_DDB_TABLE_NAME" in this lambda's javascript code
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
   GetStudentsForSpecificMentorFunction: # Function for getting all students assigned to a specific mentor
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
@@ -814,6 +892,7 @@ Resources:
       CodeUri: functions/users/mentors/
       Handler: get.lambdaHandler
       Runtime: nodejs12.x
+      Timeout: 30
       Events:
         GetEvaluationsForUser:
           Type: Api
@@ -828,6 +907,7 @@ Resources:
               Action:
                 - dynamodb:GetItem
                 - dynamodb:Scan
+                - cognito-idp:AdminGetUser
               Resource:
                 - !Sub
                   - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
@@ -835,9 +915,13 @@ Resources:
                 - !Sub
                   - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
                   - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${userPoolId}
+                  - { userPoolId: !Ref CognitoUserPool}
       Environment:
         Variables:
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
+          USER_POOL_ID: !Ref CognitoUserPool
   AddUserToTrackingLocationFunction: # Function for getting all users who are mentors
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -965,18 +1049,18 @@ Resources:
             Method: delete
       Policies: # Lists permissions; what is this lambda allowed to do/interact with?
         - Statement:
-          - Sid: DynamoDBDeletePolicy # Creates a specific, custom inline policy
-            Effect: Allow
-            Action:
-              - dynamodb:DeleteItem
-              - dynamodb:GetItem
-            Resource:
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
-                - { tableName: !Ref UsersDDBTable}
-              - !Sub
-                - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
-                - { tableName: !Ref UsersDDBTable}
+            - Sid: DynamoDBDeletePolicy # Creates a specific, custom inline policy
+              Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+                - dynamodb:GetItem
+              Resource:
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
+                  - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
+                  - { tableName: !Ref UsersDDBTable}
       Environment:
         Variables:
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
@@ -986,6 +1070,7 @@ Resources:
       CodeUri: functions/users/students/
       Handler: get.lambdaHandler
       Runtime: nodejs12.x
+      Timeout: 30
       Events:
         GetEvaluationsForUser:
           Type: Api
@@ -1000,6 +1085,7 @@ Resources:
               Action:
                 - dynamodb:GetItem
                 - dynamodb:Scan
+                - cognito-idp:AdminGetUser
               Resource:
                 - !Sub
                   - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}
@@ -1007,9 +1093,14 @@ Resources:
                 - !Sub
                   - arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}/index/*
                   - { tableName: !Ref UsersDDBTable}
+                - !Sub
+                  - arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${userPoolId}
+                  - { userPoolId: !Ref CognitoUserPool}
       Environment:
         Variables:
           USERS_DDB_TABLE_NAME: !Ref UsersDDBTable
+          USER_POOL_ID: !Ref CognitoUserPool
+
   LoginFunction: # Function for getting all users who are students
     Type: AWS::Serverless::Function # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
@@ -1042,105 +1133,108 @@ Resources:
   DataValidation:
     Type: AWS::Serverless::LayerVersion
     Properties:
-        LayerName: sam-app-common-layer
-        Description: Data validation for other requests
-        ContentUri: functions/validation/
-        CompatibleRuntimes:
-          - nodejs12.x
-
-
-
+      LayerName: sam-app-common-layer
+      Description: Data validation for other requests
+      ContentUri: functions/validation/
+      CompatibleRuntimes:
+        - nodejs12.x
+  ############ SES Identity Name #################
+  IdentityName:
+    Type: AWS::SES::ConfigurationSet
+  ############ S3 Buckets ##################
+  EvaluationsExportS3Bucket:
+    Type: AWS::S3::Bucket
   ############ DynamoDB Databases ############
   CompetenciesMasterDDBTable: # Master table to store info about each competency
     Type: AWS::DynamoDB::Table
-    Properties: 
-      AttributeDefinitions: 
+    Properties:
+      AttributeDefinitions:
         - AttributeName: "CompetencyId"
           AttributeType: "S"
-      KeySchema: 
+      KeySchema:
         - AttributeName: "CompetencyId"
           KeyType: "HASH"
-      ProvisionedThroughput: 
+      ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
       TableName: "CompetenciesMaster"
   EvaluationsDDBTable: # Holds all individual evaluations
     Type: AWS::DynamoDB::Table
-    Properties: 
-      AttributeDefinitions: 
+    Properties:
+      AttributeDefinitions:
         - AttributeName: "UserIdBeingEvaluated"
           AttributeType: "S"
         - AttributeName: "CompetencyId_Timestamp"
           AttributeType: "S"
         - AttributeName: "DateEvaluated"
           AttributeType: "S"
-      KeySchema: 
+      KeySchema:
         - AttributeName: "UserIdBeingEvaluated"
           KeyType: "HASH"
         - AttributeName: "CompetencyId_Timestamp"
           KeyType: "RANGE" # This is the SK
       LocalSecondaryIndexes:
         - IndexName: "DateEvaluatedIndex"
-          KeySchema: 
+          KeySchema:
             - AttributeName: "UserIdBeingEvaluated"
               KeyType: "HASH"
             - AttributeName: "DateEvaluated"
               KeyType: "RANGE" # This is the SK
-          Projection: 
+          Projection:
             ProjectionType: "ALL"
-      ProvisionedThroughput: 
+      ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
       TableName: "Evaluations"
   UsersDDBTable: # Stores info for all possible users of this application (students, faculty/staff, etc.)
     Type: AWS::DynamoDB::Table
-    Properties: 
-      AttributeDefinitions: 
+    Properties:
+      AttributeDefinitions:
         - AttributeName: "UserId"
           AttributeType: "S"
-      KeySchema: 
+      KeySchema:
         - AttributeName: "UserId"
           KeyType: "HASH"
-      ProvisionedThroughput: 
+      ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
       TableName: "Users"
   TrackingLocationToCompetenciesDDBTable: # Maps the tracking location (a class or type of advising) to all competencies evaluated in that class/advising type
     Type: AWS::DynamoDB::Table
-    Properties: 
-      AttributeDefinitions: 
+    Properties:
+      AttributeDefinitions:
         - AttributeName: "LocationId"
           AttributeType: "S"
-      KeySchema: 
+      KeySchema:
         - AttributeName: "LocationId"
           KeyType: "HASH"
-      ProvisionedThroughput: 
+      ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
       TableName: "TrackingLocationToCompetencies"
   UsersToTrackingLocationDDBTable: # Maps a given user to all the tracking locations they are currently a part of (essentially a student's schedule)
     Type: AWS::DynamoDB::Table
-    Properties: 
-      AttributeDefinitions: 
+    Properties:
+      AttributeDefinitions:
         - AttributeName: "UserId"
           AttributeType: "S"
-      KeySchema: 
+      KeySchema:
         - AttributeName: "UserId"
           KeyType: "HASH"
-      ProvisionedThroughput: 
+      ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
       TableName: "UsersToTrackingLocation"
   EvaluationScaleDDBTable: # Contains the textual description of what each evaluation score represents
     Type: AWS::DynamoDB::Table
-    Properties: 
-      AttributeDefinitions: 
+    Properties:
+      AttributeDefinitions:
         - AttributeName: "EvaluationScore"
           AttributeType: "S"
-      KeySchema: 
+      KeySchema:
         - AttributeName: "EvaluationScore"
           KeyType: "HASH"
-      ProvisionedThroughput: 
+      ProvisionedThroughput:
         ReadCapacityUnits: "5"
         WriteCapacityUnits: "5"
       TableName: "EvaluationScale"
@@ -1156,6 +1250,10 @@ Resources:
         Authorizers:
           MyCognitoAuthorizer:
             UserPoolArn: !GetAtt CognitoUserPool.Arn
+      Cors:
+        AllowMethods: "'*'"
+        AllowHeaders: "'*'"
+        AllowOrigin: "'*'"
   CognitoUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
@@ -1203,6 +1301,7 @@ Resources:
       AllowedOAuthFlows: # TODO: can we scope this back?
         - code
         - implicit
+      AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthScopes: # TODO: can we scope this back?
         - phone
         - email

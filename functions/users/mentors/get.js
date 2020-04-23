@@ -2,9 +2,11 @@ let response;
 
 const randomBytes = require('crypto').randomBytes;
 const AWS = require('aws-sdk');
+var cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
 const ddb = new AWS.DynamoDB.DocumentClient();
 // Allows us to access the environment variables defined in the Cloudformation template.
 const USERS_DDB_TABLE_NAME = process.env.USERS_DDB_TABLE_NAME;
+const USER_POOL_ID = process.env.USER_POOL_ID;
 
 /**
  *
@@ -71,7 +73,36 @@ exports.lambdaHandler = async (event, context) => {
 
         // Generate the response body for a successful get
         let respBody = {};
-        respBody.Items = allMentors .Items; //Gets the actual items from the call
+        // respBody.Items = allMentors.Items; //Gets the actual items from the call
+        if (queryStringParameters != null && "Enabled" in queryStringParameters && queryStringParameters.Enabled == "True") {
+            let params = {
+                "UserPoolId": USER_POOL_ID,
+            }
+            respBody.Items = [];
+            for (let i = 0; i < allMentors.Items.length; i++) {
+                console.log(allMentors.Items[i]);
+                params["Username"] = allMentors.Items[i].UserId;
+                try {
+                    let request = cognitoidentityserviceprovider.adminGetUser(params);
+                    let mentor;
+                    console.log(await request.promise());
+                    await request.send(function(err, data) {
+                        console.log(err);
+                        console.log(data);
+                        mentor = data;
+                    }); 
+                    console.log(mentor);
+                    if (mentor.Enabled) {
+                        respBody.Items.push(allMentors.Items[i]);
+                    }
+                } catch (err) {
+                    console.log(err);
+                    continue;
+                }
+            }
+        } else {
+            respBody.Items = allMentors.Items; //Gets the actual items from the call
+        }
 
         //If there are more items after the provided ones (for example if a limit is set and this does not go to the
         // end of the table) then the response will return a LastEvaluatedKey, which can be passed back into the next

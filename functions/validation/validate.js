@@ -24,7 +24,7 @@ module.exports.fieldIncludes = function memberOf(requestBody, field, possValues)
     if (!(possValues.includes(requestBody[field]))) {
         response = {
             statusCode: 400,
-            body: "Evaluation score was not valid, given value: '" + requestBody[field] + "'. Expected values: " + possValues.toString(),
+            body: "Given field '" + field + "' was not valid, given value: '" + requestBody[field] + "'. Expected values: " + possValues.toString(),
             headers: {
                 'Access-Control-Allow-Origin': '*',
             },
